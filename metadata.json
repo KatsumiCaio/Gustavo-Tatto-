@@ -1,0 +1,8 @@
+{
+  "name": "Gustavo Tattoo - Agenda",
+  "description": "App de agenda e gestão de clientes e trabalhos para tatuador profissional",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "Agenda Tatuador",
+    "slug": "agenda-tatuador",
+    "version": "1.0.0",
+    "runtimeVersion": "1.0.0",
+    "updates": {
+      "enabled": false
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.agendatatuador.app"
+    },
+    "android": {
+      "package": "com.agendatatuador.app"
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [],
+    "extra": {
+      "eas": {
+        "projectId": "11e047cc-27d3-4884-84f3-2dfcbf1d4f14"
+      }
+    },
+    "owner": "katsumicaio"
+  }
+}

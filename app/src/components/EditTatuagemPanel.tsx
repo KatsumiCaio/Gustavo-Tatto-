@@ -1,0 +1,231 @@
+import React, { useState, useEffect } from 'react';
+import { View, Text, Modal, StyleSheet, TextInput, ScrollView, TouchableOpacity, Platform, Image, Alert } from 'react-native';
+import { Tatuagem } from '../types';
+import { Colors, Shadows } from '../theme/colors';
+import * as ImagePicker from 'expo-image-picker';
+import { saveImage, deleteImage, debugSaveImage, getDisplayUri } from '../../imageStorage';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+interface EditTatuagemPanelProps {
+  visible: boolean;
+  onClose: () => void;
+  onSave: (tatuagem: Tatuagem) => void;
+  tatuagem: Tatuagem | null;
+}
+
+const EditTatuagemPanel: React.FC<EditTatuagemPanelProps> = ({ visible, onClose, onSave, tatuagem }) => {
+  const [editedTatuagem, setEditedTatuagem] = useState<Tatuagem | null>(null);
+  const [previewImagemFinal, setPreviewImagemFinal] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (tatuagem) {
+      setEditedTatuagem(JSON.parse(JSON.stringify(tatuagem)));
+    }
+  }, [tatuagem]);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadPreview = async () => {
+      if (editedTatuagem && editedTatuagem.imagemFinal) {
+        try {
+          const uri = await getDisplayUri(editedTatuagem.imagemFinal);
+          if (mounted) setPreviewImagemFinal(uri);
+        } catch (err) {
+          console.warn('Falha ao gerar preview da imagem:', err);
+          if (mounted) setPreviewImagemFinal(undefined);
+        }
+      } else {
+        if (mounted) setPreviewImagemFinal(undefined);
+      }
+    };
+    loadPreview();
+    return () => { mounted = false; };
+  }, [editedTatuagem && editedTatuagem.imagemFinal]);
+
+  const pickImage = async () => {
+    if (Platform.OS !== 'web') {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permissão necessária', 'É necessário permitir o acesso à galeria para adicionar uma imagem.');
+        return;
+      }
+    }
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      try {
+        const permanentUri = await debugSaveImage(result.assets[0].uri);
+        if (editedTatuagem) {
+          setEditedTatuagem({ ...editedTatuagem, imagemFinal: permanentUri });
+        }
+      } catch (err) {
+        console.error('pickImage -> erro ao salvar:', err);
+        Alert.alert('Erro ao salvar imagem', String(err));
+      }
+    }
+  };
+
+  const removeImage = async () => {
+    if (editedTatuagem && editedTatuagem.imagemFinal) {
+      await deleteImage(editedTatuagem.imagemFinal);
+      setEditedTatuagem({ ...editedTatuagem, imagemFinal: undefined });
+      setPreviewImagemFinal(undefined);
+    }
+  };
+
+  if (!editedTatuagem) {
+    return null;
+  }
+
+  const handleSave = () => {
+    if (editedTatuagem) {
+      onSave(editedTatuagem);
+    }
+  };
+
+  const getStatusStyle = (status: Tatuagem['status']) => {
+    switch (status) {
+      case 'agendado':
+        return { backgroundColor: Colors.primary, color: Colors.textLight };
+      case 'concluído':
+        return { backgroundColor: Colors.success, color: Colors.textLight };
+      case 'cancelado':
+        return { backgroundColor: Colors.error, color: Colors.textLight };
+      default:
+        return { backgroundColor: Colors.background, color: Colors.textMuted };
+    }
+  };
+
+  const renderStatusSelector = () => {
+    const statuses: Tatuagem['status'][] = ['agendado', 'concluído', 'cancelado'];
+    return (
+      <View style={styles.statusContainer}>
+        {statuses.map((status) => {
+          const isSelected = editedTatuagem.status === status;
+          const statusColors = getStatusStyle(status);
+
+          return (
+            <TouchableOpacity
+              key={status}
+              style={[
+                styles.statusButton,
+                { 
+                  backgroundColor: isSelected ? statusColors.backgroundColor : 'transparent',
+                  borderColor: statusColors.backgroundColor,
+                }
+              ]}
+              onPress={() => setEditedTatuagem({ ...editedTatuagem, status })}
+            >
+              <Text
+                style={[
+                  styles.statusButtonText,
+                  { color: isSelected ? statusColors.color : statusColors.backgroundColor },
+                ]}
+              >
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    );
+  };
+
+  return (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={visible}
+      onRequestClose={onClose}
+    >
+      <View style={styles.centeredView}>
+        <View style={styles.modalView}>
+          <ScrollView contentContainerStyle={styles.scrollViewContent}>
+            <Text style={styles.modalText}>Editar Agendamento</Text>
+            
+            {/* Campos de texto */}
+            <TextInput style={styles.input} value={editedTatuagem.cliente} onChangeText={(text) => setEditedTatuagem({ ...editedTatuagem, cliente: text })} placeholder="Cliente" placeholderTextColor={Colors.textMuted}/>
+            <TextInput style={styles.input} value={editedTatuagem.descricao} onChangeText={(text) => setEditedTatuagem({ ...editedTatuagem, descricao: text })} placeholder="Descrição" placeholderTextColor={Colors.textMuted}/>
+            <TextInput style={styles.input} value={editedTatuagem.valor.toString()} onChangeText={(text) => setEditedTatuagem({ ...editedTatuagem, valor: parseFloat(text) || 0 })} placeholder="Valor" keyboardType="numeric" placeholderTextColor={Colors.textMuted}/>
+            <TextInput style={styles.input} value={editedTatuagem.data} onChangeText={(text) => setEditedTatuagem({ ...editedTatuagem, data: text })} placeholder="Data" placeholderTextColor={Colors.textMuted}/>
+            <TextInput style={styles.input} value={editedTatuagem.horario} onChangeText={(text) => setEditedTatuagem({ ...editedTatuagem, horario: text })} placeholder="Horário" placeholderTextColor={Colors.textMuted}/>
+            <TextInput style={styles.input} value={editedTatuagem.local} onChangeText={(text) => setEditedTatuagem({ ...editedTatuagem, local: text })} placeholder="Local" placeholderTextColor={Colors.textMuted}/>
+            <TextInput style={styles.input} value={editedTatuagem.telefone} onChangeText={(text) => setEditedTatuagem({ ...editedTatuagem, telefone: text })} placeholder="Telefone" placeholderTextColor={Colors.textMuted}/>
+            <TextInput style={[styles.input, { height: 80 }]} value={editedTatuagem.observacoes} onChangeText={(text) => setEditedTatuagem({ ...editedTatuagem, observacoes: text })} placeholder="Observações" multiline placeholderTextColor={Colors.textMuted}/>
+
+            {renderStatusSelector()}
+
+            {/* Imagem de Referência */}
+            {editedTatuagem.imagemModelo && (
+                <View style={styles.imageContainer}>
+                    <Text style={styles.imageLabel}>Imagem de Referência</Text>
+                    <Image source={{ uri: editedTatuagem.imagemModelo }} style={styles.imagePreview} />
+                </View>
+            )}
+
+            {/* Seletor de Imagem Final */}
+            {editedTatuagem.status === 'concluído' && (
+              <View style={styles.imagePickerContainer}>
+                <Text style={styles.imagePickerLabel}>Foto da Tatuagem Finalizada</Text>
+                {editedTatuagem.imagemFinal ? (
+                  <View>
+                    <Image source={{ uri: previewImagemFinal || editedTatuagem.imagemFinal }} style={styles.imagePreview} />
+                    <TouchableOpacity style={styles.removeImageButton} onPress={removeImage}>
+                        <MaterialCommunityIcons name="close-circle" size={24} color={Colors.error} />
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <TouchableOpacity style={styles.pickImageButton} onPress={pickImage}>
+                    <MaterialCommunityIcons name="camera-plus-outline" size={22} color={Colors.primary} />
+                    <Text style={styles.pickImageButtonText}>Adicionar Foto Final</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+
+            {/* Botões de Ação */}
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity style={[styles.actionButton, styles.closeButton]} onPress={onClose}>
+                <Text style={styles.actionButtonText}>Fechar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.actionButton, styles.saveButton]} onPress={handleSave}>
+                <Text style={styles.actionButtonText}>Salvar</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+const styles = StyleSheet.create({
+  centeredView: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.7)' },
+  modalView: { margin: 20, backgroundColor: Colors.backgroundLight, borderRadius: 12, padding: 20, width: '90%', maxHeight: '85%', ...Shadows.large, borderWidth: 1, borderColor: Colors.border },
+  scrollViewContent: { paddingBottom: 20 },
+  modalText: { marginBottom: 24, textAlign: 'center', fontSize: 20, fontWeight: 'bold', color: Colors.textLight },
+  input: { width: '100%', height: 50, backgroundColor: Colors.background, borderColor: Colors.border, borderWidth: 1, borderRadius: 8, marginBottom: 12, paddingHorizontal: 15, color: Colors.textLight, fontSize: 16 },
+  statusContainer: { flexDirection: 'row', justifyContent: 'space-around', width: '100%', marginVertical: 20 },
+  statusButton: { paddingVertical: 10, paddingHorizontal: 15, borderRadius: 20, borderWidth: 1 },
+  statusButtonText: { fontWeight: 'bold', fontSize: 12 },
+  imageContainer: { width: '100%', alignItems: 'center', marginVertical: 10 },
+  imageLabel: { fontSize: 16, fontWeight: '600', color: Colors.textLight, marginBottom: 10 },
+  imagePickerContainer: { width: '100%', alignItems: 'center', marginVertical: 20, padding: 15, backgroundColor: Colors.background, borderRadius: 8, borderWidth: 1, borderColor: Colors.border },
+  imagePickerLabel: { fontSize: 16, fontWeight: '600', color: Colors.textLight, marginBottom: 15 },
+  pickImageButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'transparent', paddingVertical: 12, paddingHorizontal: 20, borderRadius: 10, borderWidth: 1, borderColor: Colors.primary, width: '100%', justifyContent: 'center' },
+  pickImageButtonText: { color: Colors.primary, marginLeft: 10, fontWeight: 'bold' },
+  imagePreview: { width: 220, height: 220, borderRadius: 12, marginBottom: 10, alignSelf: 'center', backgroundColor: Colors.surface },
+  removeImageButton: { position: 'absolute', top: 8, right: 8, backgroundColor: 'transparent', borderRadius: 16, padding: 2 },
+  buttonContainer: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginTop: 30 },
+  actionButton: { borderRadius: 8, paddingVertical: 14, flex: 1, alignItems: 'center', ...Shadows.small },
+  actionButtonText: { color: Colors.textLight, fontWeight: 'bold', fontSize: 16 },
+  saveButton: { backgroundColor: Colors.primary, marginLeft: 10 },
+  closeButton: { backgroundColor: Colors.textMuted }
+});
+
+export default EditTatuagemPanel;

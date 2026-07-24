@@ -1,0 +1,374 @@
+import React, { useState, useEffect } from 'react';
+import { useAgenda } from '../contexts/AgendaContext';
+import { Cliente } from '../types';
+import { User, UserPlus, Pencil, MapPin, DollarSign, Calendar, Clock, MessageSquare, Camera, X, CheckCircle2, Sparkles } from 'lucide-react';
+
+export const AddTatuagemScreen: React.FC = () => {
+  const { clientes, addTatuagem, updateTatuagem, tatuagens, navParams, navigate } = useAgenda();
+
+  const editingId = navParams.tatuagemId;
+  const isEditing = !!editingId;
+
+  const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
+  const [isClientModalOpen, setIsClientModalOpen] = useState(false);
+
+  const [descricao, setDescricao] = useState('');
+  const [dateStr, setDateStr] = useState(() => new Date().toISOString().split('T')[0]);
+  const [horario, setHorario] = useState('10:00');
+  const [local, setLocal] = useState('');
+  const [valor, setValor] = useState('');
+  const [observacoes, setObservacoes] = useState('');
+  const [imagemModelo, setImagemModelo] = useState<string | null>(null);
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [successMsg, setSuccessMsg] = useState(false);
+
+  useEffect(() => {
+    if (isEditing && editingId) {
+      const existing = tatuagens.find(t => t.id === editingId);
+      if (existing) {
+        const cli = clientes.find(c => c.nome === existing.cliente) || null;
+        setSelectedCliente(cli || { id: 'temp', nome: existing.cliente, telefone: existing.telefone || '' });
+        setDescricao(existing.descricao || '');
+        setDateStr(existing.data || new Date().toISOString().split('T')[0]);
+        setHorario(existing.horario || '10:00');
+        setLocal(existing.local || '');
+        setValor(existing.valor ? String(existing.valor) : '');
+        setObservacoes(existing.observacoes || '');
+        setImagemModelo(existing.imagemModelo || null);
+      }
+    }
+  }, [isEditing, editingId, tatuagens, clientes]);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setImagemModelo(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newErrors: Record<string, string> = {};
+
+    if (!selectedCliente) newErrors.cliente = 'Selecione um cliente';
+    if (!descricao.trim()) newErrors.descricao = 'Descrição é obrigatória';
+    if (!dateStr) newErrors.data = 'Data é obrigatória';
+    if (!horario) newErrors.horario = 'Horário é obrigatório';
+    if (!valor || isNaN(parseFloat(valor))) newErrors.valor = 'Valor numérico é obrigatório';
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    setErrors({});
+
+    const payload = {
+      cliente: selectedCliente!.nome,
+      descricao: descricao.trim(),
+      data: dateStr,
+      horario,
+      local: local.trim() || 'Não especificado',
+      valor: parseFloat(valor),
+      status: (isEditing ? (tatuagens.find(t => t.id === editingId)?.status || 'agendado') : 'agendado') as any,
+      telefone: selectedCliente!.telefone || undefined,
+      observacoes: observacoes.trim() || undefined,
+      imagemModelo: imagemModelo || undefined,
+    };
+
+    if (isEditing && editingId) {
+      updateTatuagem(editingId, payload);
+    } else {
+      addTatuagem(payload);
+    }
+
+    setSuccessMsg(true);
+    if (!isEditing) {
+      setSelectedCliente(null);
+      setDescricao('');
+      setDateStr(new Date().toISOString().split('T')[0]);
+      setHorario('10:00');
+      setLocal('');
+      setValor('');
+      setObservacoes('');
+      setImagemModelo(null);
+    }
+
+    setTimeout(() => {
+      setSuccessMsg(false);
+      if (isEditing) {
+        navigate('agenda');
+      }
+    }, 2000);
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto p-4 sm:p-6">
+      <div className="bg-[#2D2D2D] border border-[#3A3A3A] rounded-3xl p-6 sm:p-8 shadow-2xl">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold text-[#F5F5F5]">
+            {isEditing ? 'Editar Agendamento' : 'Agendar Tatuagem'}
+          </h2>
+          <p className="text-xs text-[#999999] mt-1">
+            Preencha os detalhes do trabalho e vincule ao cliente.
+          </p>
+        </div>
+
+        {successMsg && (
+          <div className="mb-6 p-4 rounded-2xl bg-[#4CAF50]/15 border border-[#4CAF50]/30 text-[#4CAF50] text-sm font-semibold flex items-center justify-center gap-2 animate-fade-in">
+            <CheckCircle2 size={18} />
+            <span>Tatuagem {isEditing ? 'atualizada' : 'agendada'} com sucesso!</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSave} className="space-y-5">
+          {/* Cliente Selection */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-[#999999]">
+                Cliente *
+              </label>
+              <button
+                type="button"
+                onClick={() => navigate('cadastro_cliente')}
+                className="inline-flex items-center gap-1 text-xs text-[#FF6B35] hover:underline font-semibold"
+              >
+                <UserPlus size={14} /> Novo Cliente
+              </button>
+            </div>
+
+            <div
+              onClick={() => setIsClientModalOpen(true)}
+              className={`flex items-center gap-3 bg-[#1C1C1C] border ${
+                errors.cliente ? 'border-[#E63946]' : 'border-[#3A3A3A]'
+              } rounded-xl px-3.5 py-3 cursor-pointer hover:border-[#FF6B35] transition-colors`}
+            >
+              <User size={18} className="text-[#999999]" />
+              <span className={`text-sm font-medium ${selectedCliente ? 'text-white' : 'text-[#999999]'}`}>
+                {selectedCliente ? selectedCliente.nome : 'Selecione um cliente da lista'}
+              </span>
+            </div>
+            {errors.cliente && <p className="text-xs text-[#E63946]">{errors.cliente}</p>}
+          </div>
+
+          {/* Tattoo Details */}
+          <div className="space-y-4 border-t border-[#3A3A3A] pt-4">
+            <h3 className="text-xs font-bold text-[#FF6B35] uppercase tracking-wider flex items-center gap-1.5">
+              <Sparkles size={14} /> Detalhes da Tatuagem
+            </h3>
+
+            {/* Descrição */}
+            <div>
+              <label className="block text-xs font-semibold text-[#999999] mb-1">
+                Descrição do Trabalho *
+              </label>
+              <div className="relative">
+                <Pencil size={18} className="absolute left-3.5 top-3 text-[#999999]" />
+                <textarea
+                  value={descricao}
+                  onChange={e => setDescricao(e.target.value)}
+                  placeholder="Ex: Leão realista no antebraço em tom sombreado"
+                  rows={3}
+                  className={`w-full bg-[#1C1C1C] border ${
+                    errors.descricao ? 'border-[#E63946]' : 'border-[#3A3A3A]'
+                  } focus:border-[#FF6B35] rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#F5F5F5] focus:outline-none`}
+                />
+              </div>
+              {errors.descricao && <p className="text-xs text-[#E63946] mt-1">{errors.descricao}</p>}
+            </div>
+
+            {/* Reference Image Upload */}
+            <div>
+              <label className="block text-xs font-semibold text-[#999999] mb-1">
+                Imagem de Referência / Modelo
+              </label>
+              {imagemModelo ? (
+                <div className="relative rounded-2xl overflow-hidden border border-[#3A3A3A] h-48 bg-black">
+                  <img src={imagemModelo} alt="Modelo" className="w-full h-full object-contain" />
+                  <button
+                    type="button"
+                    onClick={() => setImagemModelo(null)}
+                    className="absolute top-2 right-2 p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg transition-colors"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-[#3A3A3A] hover:border-[#FF6B35] rounded-2xl cursor-pointer bg-[#1C1C1C]/50 transition-colors group">
+                  <Camera size={24} className="text-[#999999] group-hover:text-[#FF6B35] transition-colors mb-1" />
+                  <span className="text-xs font-semibold text-[#999999] group-hover:text-white transition-colors">
+                    Clique para selecionar imagem de modelo
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
+
+            {/* Local no Corpo & Valor */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-[#999999] mb-1">
+                  Local no Corpo
+                </label>
+                <div className="relative">
+                  <MapPin size={18} className="absolute left-3.5 top-3 text-[#999999]" />
+                  <input
+                    type="text"
+                    value={local}
+                    onChange={e => setLocal(e.target.value)}
+                    placeholder="Ex: Antebraço direito"
+                    className="w-full bg-[#1C1C1C] border border-[#3A3A3A] focus:border-[#FF6B35] rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#F5F5F5] focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#999999] mb-1">
+                  Valor (R$) *
+                </label>
+                <div className="relative">
+                  <DollarSign size={18} className="absolute left-3.5 top-3 text-[#FFB703]" />
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={valor}
+                    onChange={e => setValor(e.target.value)}
+                    placeholder="0.00"
+                    className={`w-full bg-[#1C1C1C] border ${
+                      errors.valor ? 'border-[#E63946]' : 'border-[#3A3A3A]'
+                    } focus:border-[#FF6B35] rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#F5F5F5] focus:outline-none font-bold text-[#FFB703]`}
+                  />
+                </div>
+                {errors.valor && <p className="text-xs text-[#E63946] mt-1">{errors.valor}</p>}
+              </div>
+            </div>
+          </div>
+
+          {/* Agendamento Schedule */}
+          <div className="space-y-4 border-t border-[#3A3A3A] pt-4">
+            <h3 className="text-xs font-bold text-[#FF6B35] uppercase tracking-wider flex items-center gap-1.5">
+              <Calendar size={14} /> Agendamento
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-[#999999] mb-1">
+                  Data *
+                </label>
+                <input
+                  type="date"
+                  value={dateStr}
+                  onChange={e => setDateStr(e.target.value)}
+                  className="w-full bg-[#1C1C1C] border border-[#3A3A3A] focus:border-[#FF6B35] rounded-xl px-3.5 py-2.5 text-sm text-[#F5F5F5] focus:outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#999999] mb-1">
+                  Horário *
+                </label>
+                <input
+                  type="time"
+                  value={horario}
+                  onChange={e => setHorario(e.target.value)}
+                  className="w-full bg-[#1C1C1C] border border-[#3A3A3A] focus:border-[#FF6B35] rounded-xl px-3.5 py-2.5 text-sm text-[#F5F5F5] focus:outline-none"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-[#999999] mb-1">
+                Observações
+              </label>
+              <div className="relative">
+                <MessageSquare size={18} className="absolute left-3.5 top-3 text-[#999999]" />
+                <input
+                  type="text"
+                  value={observacoes}
+                  onChange={e => setObservacoes(e.target.value)}
+                  placeholder="Informações sobre pele, agulhas, alergia..."
+                  className="w-full bg-[#1C1C1C] border border-[#3A3A3A] focus:border-[#FF6B35] rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#F5F5F5] focus:outline-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-2">
+            <button
+              type="submit"
+              className="w-full bg-[#FF6B35] hover:bg-[#E63946] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-[#FF6B35]/20 transition-all text-sm flex items-center justify-center gap-2"
+            >
+              <Sparkles size={18} />
+              <span>{isEditing ? 'Salvar Alterações' : '✨ Agendar Tatuagem'}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* Modal Selection for Client */}
+      {isClientModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-[#2D2D2D] border border-[#3A3A3A] rounded-2xl max-w-md w-full max-h-[80vh] flex flex-col shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-[#3A3A3A] bg-[#2A2A2A]">
+              <h3 className="text-base font-bold text-[#F5F5F5]">Selecione um Cliente</h3>
+              <button
+                onClick={() => setIsClientModalOpen(false)}
+                className="p-1 rounded-lg text-[#999999] hover:text-white"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-4 overflow-y-auto divide-y divide-[#3A3A3A]">
+              {clientes.length > 0 ? (
+                clientes.map(cli => (
+                  <button
+                    key={cli.id}
+                    onClick={() => {
+                      setSelectedCliente(cli);
+                      setIsClientModalOpen(false);
+                    }}
+                    className="w-full py-3 px-2 text-left hover:bg-[#333333] transition-colors rounded-xl flex items-center justify-between group"
+                  >
+                    <div>
+                      <p className="text-sm font-bold text-[#F5F5F5] group-hover:text-[#FF6B35] transition-colors">
+                        {cli.nome}
+                      </p>
+                      <p className="text-xs text-[#999999]">{cli.telefone}</p>
+                    </div>
+                    <User size={16} className="text-[#999999] group-hover:text-[#FF6B35]" />
+                  </button>
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-xs text-[#999999] mb-3">Nenhum cliente cadastrado ainda.</p>
+                  <button
+                    onClick={() => {
+                      setIsClientModalOpen(false);
+                      navigate('cadastro_cliente');
+                    }}
+                    className="bg-[#FF6B35] text-white text-xs font-bold px-4 py-2 rounded-xl"
+                  >
+                    + Cadastrar Novo Cliente
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

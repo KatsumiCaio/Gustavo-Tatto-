@@ -1,0 +1,234 @@
+import React, { useState } from 'react';
+import { useAgenda } from '../contexts/AgendaContext';
+import { Trash2, History, Download, Upload, RefreshCw, AlertTriangle, CheckCircle2, ShieldCheck, DollarSign, Calendar, CheckCircle, XCircle } from 'lucide-react';
+import { ConfirmModal } from '../components/ConfirmModal';
+
+export const SettingsScreen: React.FC = () => {
+  const { tatuagens, clientes, clearAllData, reloadData, navigate } = useAgenda();
+
+  const [syncKey, setSyncKey] = useState('');
+  const [feedbackMsg, setFeedbackMsg] = useState('');
+  const [isConfirmClearOpen, setIsConfirmClearOpen] = useState(false);
+
+  const stats = {
+    total: tatuagens.length,
+    agendadas: tatuagens.filter(t => t.status === 'agendado').length,
+    concluidas: tatuagens.filter(t => t.status === 'concluído').length,
+    canceladas: tatuagens.filter(t => t.status === 'cancelado').length,
+  };
+
+  const faturamentoConcluido = tatuagens
+    .filter(t => t.status === 'concluído')
+    .reduce((acc, t) => acc + (t.valor || 0), 0);
+
+  const formatCurrency = (val: number) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+  };
+
+  const handleClearAll = () => {
+    setIsConfirmClearOpen(true);
+  };
+
+  const handleConfirmClearAll = () => {
+    clearAllData();
+    setIsConfirmClearOpen(false);
+    setFeedbackMsg('Todos os dados foram apagados com sucesso.');
+    setTimeout(() => setFeedbackMsg(''), 3000);
+  };
+
+  const handleExportBackup = () => {
+    const backupData = {
+      timestamp: new Date().toISOString(),
+      clientes,
+      tatuagens,
+    };
+    const jsonStr = JSON.stringify(backupData, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `gustavo_tattoo_backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setFeedbackMsg('Backup baixado com sucesso!');
+    setTimeout(() => setFeedbackMsg(''), 3000);
+  };
+
+  const handleImportBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(reader.result as string);
+        if (parsed.tatuagens && Array.isArray(parsed.tatuagens) && parsed.clientes && Array.isArray(parsed.clientes)) {
+          localStorage.setItem('tatuagens_data', JSON.stringify(parsed.tatuagens));
+          localStorage.setItem('clientes_data', JSON.stringify(parsed.clientes));
+          reloadData();
+          setFeedbackMsg('Dados do backup restaurados com sucesso!');
+          setTimeout(() => setFeedbackMsg(''), 3000);
+        } else {
+          alert('Arquivo de backup inválido.');
+        }
+      } catch (err) {
+        alert('Erro ao processar o arquivo de backup.');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-8">
+      {feedbackMsg && (
+        <div className="p-4 rounded-2xl bg-[#4CAF50]/15 border border-[#4CAF50]/30 text-[#4CAF50] text-sm font-semibold flex items-center justify-center gap-2 animate-fade-in">
+          <CheckCircle2 size={18} />
+          <span>{feedbackMsg}</span>
+        </div>
+      )}
+
+      {/* Stats Cards */}
+      <div>
+        <h2 className="text-lg font-bold text-[#F5F5F5] mb-4 flex items-center gap-2 border-l-4 border-[#FF6B35] pl-3">
+          📊 Resumo Geral
+        </h2>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          <div className="bg-[#2D2D2D] border border-[#3A3A3A] p-4 rounded-2xl border-t-4 border-t-[#FFB703] shadow-lg text-center">
+            <span className="text-2xl mb-1 block">📋</span>
+            <span className="text-2xl font-black text-[#F5F5F5]">{stats.total}</span>
+            <p className="text-xs font-semibold text-[#999999] mt-0.5">Total de Trabalhos</p>
+          </div>
+
+          <div className="bg-[#2D2D2D] border border-[#3A3A3A] p-4 rounded-2xl border-t-4 border-t-[#FF6B35] shadow-lg text-center">
+            <span className="text-2xl mb-1 block">📅</span>
+            <span className="text-2xl font-black text-[#F5F5F5]">{stats.agendadas}</span>
+            <p className="text-xs font-semibold text-[#999999] mt-0.5">Agendadas</p>
+          </div>
+
+          <div className="bg-[#2D2D2D] border border-[#3A3A3A] p-4 rounded-2xl border-t-4 border-t-[#4CAF50] shadow-lg text-center">
+            <span className="text-2xl mb-1 block">✅</span>
+            <span className="text-2xl font-black text-[#4CAF50]">{stats.concluidas}</span>
+            <p className="text-xs font-semibold text-[#999999] mt-0.5">Concluídas</p>
+          </div>
+
+          <div className="bg-[#2D2D2D] border border-[#3A3A3A] p-4 rounded-2xl border-t-4 border-t-[#E63946] shadow-lg text-center">
+            <span className="text-2xl mb-1 block">❌</span>
+            <span className="text-2xl font-black text-[#E63946]">{stats.canceladas}</span>
+            <p className="text-xs font-semibold text-[#999999] mt-0.5">Canceladas</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Faturamento Card */}
+      <div>
+        <h2 className="text-lg font-bold text-[#F5F5F5] mb-4 flex items-center gap-2 border-l-4 border-[#FFB703] pl-3">
+          💰 Faturamento
+        </h2>
+
+        <div className="bg-[#2D2D2D] border border-[#3A3A3A] border-l-8 border-l-[#FFB703] p-6 rounded-3xl shadow-xl flex items-center justify-between">
+          <div>
+            <p className="text-xs font-bold text-[#999999] uppercase tracking-wider">
+              Faturamento Concluído
+            </p>
+            <p className="text-3xl font-black text-[#FFB703] mt-1">
+              {formatCurrency(faturamentoConcluido)}
+            </p>
+            <p className="text-xs text-[#999999] mt-1 italic">
+              Baseado em {stats.concluidas} tatuagens com status concluído
+            </p>
+          </div>
+          <div className="w-16 h-16 rounded-2xl bg-[#FFB703]/10 border border-[#FFB703]/30 flex items-center justify-center text-3xl">
+            💵
+          </div>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div>
+        <h2 className="text-lg font-bold text-[#F5F5F5] mb-4 flex items-center gap-2 border-l-4 border-[#FF6B35] pl-3">
+          ⚙️ Ações e Histórico
+        </h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <button
+            onClick={() => navigate('historico_trabalhos')}
+            className="bg-[#2D2D2D] hover:bg-[#333333] border border-[#3A3A3A] p-5 rounded-2xl text-left shadow-lg transition-all flex items-center gap-4 group"
+          >
+            <div className="p-3 rounded-xl bg-[#FF6B35]/10 text-[#FF6B35] group-hover:scale-110 transition-transform">
+              <History size={24} />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-[#F5F5F5]">Histórico de Trabalhos</p>
+              <p className="text-xs text-[#999999] mt-0.5">Visualize e gerencie todos os trabalhos cadastrados</p>
+            </div>
+          </button>
+
+          <button
+            onClick={handleClearAll}
+            className="bg-[#2D2D2D] hover:bg-[#E63946]/10 border border-[#3A3A3A] hover:border-[#E63946] p-5 rounded-2xl text-left shadow-lg transition-all flex items-center gap-4 group"
+          >
+            <div className="p-3 rounded-xl bg-[#E63946]/10 text-[#E63946] group-hover:scale-110 transition-transform">
+              <Trash2 size={24} />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-[#E63946]">Limpar Todos os Dados</p>
+              <p className="text-xs text-[#999999] mt-0.5">Apaga todos os registros de tatuagens e clientes</p>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* Backup and Sync */}
+      <div>
+        <h2 className="text-lg font-bold text-[#F5F5F5] mb-4 flex items-center gap-2 border-l-4 border-[#FF6B35] pl-3">
+          🔁 Backup e Restauração Local
+        </h2>
+
+        <div className="bg-[#2D2D2D] border border-[#3A3A3A] p-6 rounded-3xl shadow-xl space-y-4">
+          <p className="text-xs text-[#999999]">
+            Exporte uma cópia completa dos seus agendamentos e clientes em arquivo JSON para guardar com segurança ou transferir para outro navegador.
+          </p>
+
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={handleExportBackup}
+              className="flex items-center gap-2 bg-[#FF6B35] hover:bg-[#E63946] text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md transition-all"
+            >
+              <Download size={16} /> Baixar Arquivo de Backup (.json)
+            </button>
+
+            <label className="flex items-center gap-2 bg-[#2A2A2A] hover:bg-[#3A3A3A] text-[#F5F5F5] border border-[#3A3A3A] font-bold text-xs px-4 py-2.5 rounded-xl cursor-pointer transition-all">
+              <Upload size={16} className="text-[#FFB703]" /> Restaurar de Backup (.json)
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleImportBackup}
+                className="hidden"
+              />
+            </label>
+          </div>
+        </div>
+      </div>
+
+      {/* About */}
+      <div className="bg-[#2D2D2D] border border-[#3A3A3A] p-6 rounded-3xl shadow-xl text-center space-y-2">
+        <h3 className="text-base font-bold text-[#F5F5F5]">Gustavo Tattoo - Agenda</h3>
+        <p className="text-xs font-semibold text-[#FF6B35]">Versão 1.0.0 (Web Edition)</p>
+        <p className="text-xs text-[#999999] max-w-md mx-auto">
+          Aplicação desenvolvida sob medida para tatuadores profissionais gerenciarem agenda, clientes e acompanhamento de sessões com agilidade.
+        </p>
+      </div>
+
+      <ConfirmModal
+        isOpen={isConfirmClearOpen}
+        title="Apagar Todos os Dados"
+        message="Você tem certeza que deseja apagar TODOS os dados e clientes do sistema? Esta ação é irreversível."
+        confirmText="Apagar Tudo"
+        cancelText="Cancelar"
+        isDanger={true}
+        onConfirm={handleConfirmClearAll}
+        onCancel={() => setIsConfirmClearOpen(false)}
+      />
+    </div>
+  );
+};
