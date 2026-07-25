@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <rect width="192" height="192" rx="48" fill="#1C1C1C"/>
+  <rect x="8" y="8" width="176" height="176" rx="40" fill="none" stroke="#FF6B35" stroke-width="4" opacity="0.3"/>
+  <circle cx="96" cy="96" r="68" fill="#2D2D2D" stroke="#FF6B35" stroke-width="3"/>
+  <path d="M96 36 L105 75 L99 75 L99 135 L93 135 L93 75 L87 75 Z" fill="#FF6B35"/>
+  <polygon points="96,156 94,135 98,135" fill="#F5F5F5"/>
+  <circle cx="96" cy="68" r="10" fill="#1C1C1C" stroke="#FF6B35" stroke-width="2"/>
+  <text x="96" y="172" font-family="sans-serif" font-weight="900" font-size="12" fill="#F5F5F5" text-anchor="middle">TATTOO</text>
+</svg>

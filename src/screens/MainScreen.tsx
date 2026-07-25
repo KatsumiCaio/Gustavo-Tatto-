@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAgenda } from '../contexts/AgendaContext';
-import { Calendar, UserPlus, PlusCircle, History, Settings, DollarSign, Users, Clock, Sparkles, ShieldAlert, FileText } from 'lucide-react';
+import { Calendar, UserPlus, PlusCircle, History, Settings, DollarSign, Users, Clock, Sparkles, ShieldAlert, Smartphone, Apple } from 'lucide-react';
+import { InstallAppModal } from '../components/InstallAppModal';
 
 export const MainScreen: React.FC = () => {
   const { navigate, tatuagens, clientes } = useAgenda();
+  const [isInstallOpen, setIsInstallOpen] = useState(false);
 
   const todayStr = new Date().toISOString().split('T')[0];
   const agendamentosHoje = tatuagens.filter(t => t.data === todayStr && t.status === 'agendado');
@@ -80,6 +82,18 @@ export const MainScreen: React.FC = () => {
         <p className="text-xs sm:text-sm text-[#999999] mt-2 max-w-md mx-auto">
           Gerenciamento prático e moderno de agendamentos, clientes e faturamento
         </p>
+
+        {/* PWA / iPhone App Download Banner */}
+        <div className="mt-4 inline-flex items-center gap-2 bg-gradient-to-r from-[#FF6B35]/20 via-[#2D2D2D] to-[#1C1C1C] border border-[#FF6B35]/40 p-2.5 px-4 rounded-2xl text-xs text-[#F5F5F5] shadow-lg">
+          <Apple size={16} className="text-[#FF6B35]" />
+          <span>Quer usar como aplicativo no seu <strong>iPhone / Celular</strong>?</span>
+          <button
+            onClick={() => setIsInstallOpen(true)}
+            className="ml-1 bg-[#FF6B35] hover:bg-[#E85D2A] text-white font-bold px-3 py-1 rounded-xl text-[11px] transition-all flex items-center gap-1 shadow-md"
+          >
+            <Smartphone size={13} /> Instalar App
+          </button>
+        </div>
       </div>
 
       {/* Main Grid Menu Cards */}
@@ -145,6 +159,8 @@ export const MainScreen: React.FC = () => {
           </span>
         </div>
       </div>
+
+      <InstallAppModal isOpen={isInstallOpen} onClose={() => setIsInstallOpen(false)} />
     </div>
   );
 };
