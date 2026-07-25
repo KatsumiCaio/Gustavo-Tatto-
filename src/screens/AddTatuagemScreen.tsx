@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAgenda } from '../contexts/AgendaContext';
 import { Cliente } from '../types';
+import { compressImage } from '../utils/imageCompressor';
 import { User, UserPlus, Pencil, MapPin, DollarSign, Calendar, Clock, MessageSquare, Camera, X, CheckCircle2, Sparkles } from 'lucide-react';
 
 export const AddTatuagemScreen: React.FC = () => {
@@ -40,16 +41,15 @@ export const AddTatuagemScreen: React.FC = () => {
     }
   }, [isEditing, editingId, tatuagens, clientes]);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        setImagemModelo(reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      const compressed = await compressImage(file, 800, 800, 0.75);
+      setImagemModelo(compressed);
+    } catch (err) {
+      console.error('Erro ao comprimir imagem:', err);
+    }
   };
 
   const handleSave = (e: React.FormEvent) => {

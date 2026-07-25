@@ -51,6 +51,10 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
                 <h1 className="text-lg sm:text-xl font-bold text-[#F5F5F5] leading-tight">
                   {displayTitle}
                 </h1>
+                <span className="hidden md:inline-flex items-center gap-1 bg-[#25D366]/10 text-[#25D366] text-[10px] font-bold px-2 py-0.5 rounded-full border border-[#25D366]/30">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#25D366] animate-pulse"></span>
+                  Salvo
+                </span>
               </div>
               {subtitle ? (
                 <p className="text-xs text-[#999999]">{subtitle}</p>

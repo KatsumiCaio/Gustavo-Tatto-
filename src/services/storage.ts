@@ -5,6 +5,10 @@ const CLIENTES_KEY = 'clientes_data';
 const ANAMNESES_KEY = 'anamneses_data';
 const FLASHES_KEY = 'flashes_data';
 
+const DB_NAME = 'GustavoTattooDB';
+const DB_VERSION = 1;
+const STORE_NAME = 'app_store';
+
 const sampleClientes: Cliente[] = [
   {
     id: 'c1',
@@ -114,7 +118,80 @@ const sampleFlashes: FlashArt[] = [
   },
 ];
 
+// Helper to interact with IndexedDB as a persistent backup store
+function openIDB(): Promise<IDBDatabase | null> {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined' || !window.indexedDB) {
+      resolve(null);
+      return;
+    }
+    try {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+      request.onupgradeneeded = (e: any) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          db.createObjectStore(STORE_NAME);
+        }
+      };
+      request.onsuccess = (e: any) => resolve(e.target.result);
+      request.onerror = () => resolve(null);
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+async function saveIDB(key: string, value: any): Promise<void> {
+  const db = await openIDB();
+  if (!db) return;
+  try {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    store.put(value, key);
+  } catch (e) {
+    console.error('IndexedDB save error:', e);
+  }
+}
+
+async function getIDB(key: string): Promise<any> {
+  const db = await openIDB();
+  if (!db) return null;
+  return new Promise((resolve) => {
+    try {
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.get(key);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => resolve(null);
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
 export const StorageService = {
+  // Sync initialization (e.g. restore from IDB if LocalStorage was cleared)
+  async initStorage(): Promise<void> {
+    try {
+      const keys = [CLIENTES_KEY, TATUAGENS_KEY, ANAMNESES_KEY, FLASHES_KEY];
+      for (const k of keys) {
+        const lsData = localStorage.getItem(k);
+        if (!lsData) {
+          const idbData = await getIDB(k);
+          if (idbData) {
+            try {
+              localStorage.setItem(k, JSON.stringify(idbData));
+            } catch (e) {
+              console.warn('LocalStorage copy failed (using IDB):', e);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Storage init error:', e);
+    }
+  },
+
   getClientes(): Cliente[] {
     try {
       const data = localStorage.getItem(CLIENTES_KEY);
@@ -133,8 +210,9 @@ export const StorageService = {
     try {
       localStorage.setItem(CLIENTES_KEY, JSON.stringify(clientes));
     } catch (e) {
-      console.error('Error saving clientes:', e);
+      console.error('Error saving clientes to localStorage:', e);
     }
+    saveIDB(CLIENTES_KEY, clientes);
   },
 
   getTatuagens(): Tatuagem[] {
@@ -155,8 +233,9 @@ export const StorageService = {
     try {
       localStorage.setItem(TATUAGENS_KEY, JSON.stringify(tatuagens));
     } catch (e) {
-      console.error('Error saving tatuagens:', e);
+      console.error('Error saving tatuagens to localStorage:', e);
     }
+    saveIDB(TATUAGENS_KEY, tatuagens);
   },
 
   getAnamneses(): Anamnese[] {
@@ -176,8 +255,9 @@ export const StorageService = {
     try {
       localStorage.setItem(ANAMNESES_KEY, JSON.stringify(anamneses));
     } catch (e) {
-      console.error('Error saving anamneses:', e);
+      console.error('Error saving anamneses to localStorage:', e);
     }
+    saveIDB(ANAMNESES_KEY, anamneses);
   },
 
   getFlashes(): FlashArt[] {
@@ -198,8 +278,9 @@ export const StorageService = {
     try {
       localStorage.setItem(FLASHES_KEY, JSON.stringify(flashes));
     } catch (e) {
-      console.error('Error saving flashes:', e);
+      console.error('Error saving flashes to localStorage:', e);
     }
+    saveIDB(FLASHES_KEY, flashes);
   },
 
   clearAll(): void {
@@ -211,5 +292,9 @@ export const StorageService = {
     } catch (e) {
       console.error('Error clearing storage:', e);
     }
+    saveIDB(TATUAGENS_KEY, null);
+    saveIDB(CLIENTES_KEY, null);
+    saveIDB(ANAMNESES_KEY, null);
+    saveIDB(FLASHES_KEY, null);
   },
 };

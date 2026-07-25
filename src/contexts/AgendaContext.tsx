@@ -41,7 +41,11 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [history, setHistory] = useState<{ screen: ScreenName; params: NavigationParams }[]>([]);
 
   useEffect(() => {
-    loadAllData();
+    const initAndLoad = async () => {
+      await StorageService.initStorage();
+      loadAllData();
+    };
+    initAndLoad();
   }, []);
 
   const loadAllData = () => {

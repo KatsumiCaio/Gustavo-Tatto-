@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAgenda } from '../contexts/AgendaContext';
 import { FlashArt, Cliente } from '../types';
+import { compressImage } from '../utils/imageCompressor';
 import {
   Sparkles,
   Plus,
@@ -108,18 +109,19 @@ export const FlashesGalleryScreen: React.FC = () => {
     setIsFormOpen(true);
   };
 
-  const handleImageFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert('A imagem deve ter no máximo 5MB.');
+      if (file.size > 15 * 1024 * 1024) {
+        alert('A imagem deve ter no máximo 15MB.');
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagem(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const compressed = await compressImage(file, 800, 800, 0.75);
+        setImagem(compressed);
+      } catch (err) {
+        console.error('Erro ao comprimir imagem:', err);
+      }
     }
   };
 
