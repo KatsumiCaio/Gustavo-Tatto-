@@ -4,6 +4,7 @@ const TATUAGENS_KEY = 'tatuagens_data';
 const CLIENTES_KEY = 'clientes_data';
 const ANAMNESES_KEY = 'anamneses_data';
 const FLASHES_KEY = 'flashes_data';
+const INITIALIZED_KEY = 'app_initialized_v2';
 
 const DB_NAME = 'GustavoTattooDB';
 const DB_VERSION = 1;
@@ -170,15 +171,28 @@ async function getIDB(key: string): Promise<any> {
 }
 
 export const StorageService = {
-  // Sync initialization (e.g. restore from IDB if LocalStorage was cleared)
+  // Sync initialization (seeds sample data ONLY on very first launch)
   async initStorage(): Promise<void> {
     try {
+      const isInit = localStorage.getItem(INITIALIZED_KEY) || (await getIDB(INITIALIZED_KEY));
+      if (!isInit) {
+        // Very first launch ever: seed sample data
+        this.saveClientes(sampleClientes);
+        this.saveTatuagens(sampleTatuagens);
+        this.saveFlashes(sampleFlashes);
+        this.saveAnamneses([]);
+        localStorage.setItem(INITIALIZED_KEY, 'true');
+        saveIDB(INITIALIZED_KEY, 'true');
+        return;
+      }
+
+      // If already initialized, restore from IndexedDB if LocalStorage was lost
       const keys = [CLIENTES_KEY, TATUAGENS_KEY, ANAMNESES_KEY, FLASHES_KEY];
       for (const k of keys) {
         const lsData = localStorage.getItem(k);
-        if (!lsData) {
+        if (lsData === null) {
           const idbData = await getIDB(k);
-          if (idbData) {
+          if (idbData !== null && idbData !== undefined) {
             try {
               localStorage.setItem(k, JSON.stringify(idbData));
             } catch (e) {
@@ -195,53 +209,55 @@ export const StorageService = {
   getClientes(): Cliente[] {
     try {
       const data = localStorage.getItem(CLIENTES_KEY);
-      if (!data) {
-        this.saveClientes(sampleClientes);
-        return sampleClientes;
+      if (data === null || data === undefined) {
+        return [];
       }
       return JSON.parse(data);
     } catch (e) {
       console.error('Error reading clientes:', e);
-      return sampleClientes;
+      return [];
     }
   },
 
   saveClientes(clientes: Cliente[]): void {
     try {
       localStorage.setItem(CLIENTES_KEY, JSON.stringify(clientes));
+      localStorage.setItem(INITIALIZED_KEY, 'true');
     } catch (e) {
       console.error('Error saving clientes to localStorage:', e);
     }
     saveIDB(CLIENTES_KEY, clientes);
+    saveIDB(INITIALIZED_KEY, 'true');
   },
 
   getTatuagens(): Tatuagem[] {
     try {
       const data = localStorage.getItem(TATUAGENS_KEY);
-      if (!data) {
-        this.saveTatuagens(sampleTatuagens);
-        return sampleTatuagens;
+      if (data === null || data === undefined) {
+        return [];
       }
       return JSON.parse(data);
     } catch (e) {
       console.error('Error reading tatuagens:', e);
-      return sampleTatuagens;
+      return [];
     }
   },
 
   saveTatuagens(tatuagens: Tatuagem[]): void {
     try {
       localStorage.setItem(TATUAGENS_KEY, JSON.stringify(tatuagens));
+      localStorage.setItem(INITIALIZED_KEY, 'true');
     } catch (e) {
       console.error('Error saving tatuagens to localStorage:', e);
     }
     saveIDB(TATUAGENS_KEY, tatuagens);
+    saveIDB(INITIALIZED_KEY, 'true');
   },
 
   getAnamneses(): Anamnese[] {
     try {
       const data = localStorage.getItem(ANAMNESES_KEY);
-      if (!data) {
+      if (data === null || data === undefined) {
         return [];
       }
       return JSON.parse(data);
@@ -254,47 +270,48 @@ export const StorageService = {
   saveAnamneses(anamneses: Anamnese[]): void {
     try {
       localStorage.setItem(ANAMNESES_KEY, JSON.stringify(anamneses));
+      localStorage.setItem(INITIALIZED_KEY, 'true');
     } catch (e) {
       console.error('Error saving anamneses to localStorage:', e);
     }
     saveIDB(ANAMNESES_KEY, anamneses);
+    saveIDB(INITIALIZED_KEY, 'true');
   },
 
   getFlashes(): FlashArt[] {
     try {
       const data = localStorage.getItem(FLASHES_KEY);
-      if (!data) {
-        this.saveFlashes(sampleFlashes);
-        return sampleFlashes;
+      if (data === null || data === undefined) {
+        return [];
       }
       return JSON.parse(data);
     } catch (e) {
       console.error('Error reading flashes:', e);
-      return sampleFlashes;
+      return [];
     }
   },
 
   saveFlashes(flashes: FlashArt[]): void {
     try {
       localStorage.setItem(FLASHES_KEY, JSON.stringify(flashes));
+      localStorage.setItem(INITIALIZED_KEY, 'true');
     } catch (e) {
       console.error('Error saving flashes to localStorage:', e);
     }
     saveIDB(FLASHES_KEY, flashes);
+    saveIDB(INITIALIZED_KEY, 'true');
   },
 
   clearAll(): void {
+    this.saveClientes([]);
+    this.saveTatuagens([]);
+    this.saveAnamneses([]);
+    this.saveFlashes([]);
     try {
-      localStorage.removeItem(TATUAGENS_KEY);
-      localStorage.removeItem(CLIENTES_KEY);
-      localStorage.removeItem(ANAMNESES_KEY);
-      localStorage.removeItem(FLASHES_KEY);
+      localStorage.setItem(INITIALIZED_KEY, 'true');
     } catch (e) {
-      console.error('Error clearing storage:', e);
+      console.error('Error setting initialized key:', e);
     }
-    saveIDB(TATUAGENS_KEY, null);
-    saveIDB(CLIENTES_KEY, null);
-    saveIDB(ANAMNESES_KEY, null);
-    saveIDB(FLASHES_KEY, null);
+    saveIDB(INITIALIZED_KEY, 'true');
   },
 };
