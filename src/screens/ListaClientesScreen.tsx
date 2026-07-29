@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAgenda } from '../contexts/AgendaContext';
-import { Search, UserPlus, ChevronRight, Phone, Instagram, History, Edit2, Trash2, X, Save, MessageSquare, ShieldAlert } from 'lucide-react';
+import { Search, UserPlus, ChevronRight, Phone, Instagram, History, Edit2, Trash2, X, Save, MessageSquare } from 'lucide-react';
 import { Cliente } from '../types';
 import { ConfirmModal } from '../components/ConfirmModal';
 
@@ -157,18 +157,6 @@ export const ListaClientesScreen: React.FC = () => {
                         <MessageSquare size={16} />
                       </a>
                     )}
-
-                    {/* Anamnese & Cuidados Button */}
-                    <button
-                      onClick={e => {
-                        e.stopPropagation();
-                        navigate('anamnese', { clienteId: cliente.id, clienteNome: cliente.nome });
-                      }}
-                      className="p-2 rounded-xl text-[#FF6B35] bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors"
-                      title="Ficha de Anamnese & Cuidados Pós"
-                    >
-                      <ShieldAlert size={16} />
-                    </button>
 
                     <span className="text-xs font-bold bg-[#1C1C1C] text-[#FF6B35] border border-[#3A3A3A] px-2.5 py-1 rounded-full whitespace-nowrap">
                       {count} {count === 1 ? 'trabalho' : 'trabalhos'}

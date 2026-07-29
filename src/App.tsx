@@ -9,8 +9,6 @@ import { CadastroClienteScreen } from './screens/CadastroClienteScreen';
 import { ListaClientesScreen } from './screens/ListaClientesScreen';
 import { HistoricoTrabalhosScreen } from './screens/HistoricoTrabalhosScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
-import { AnamneseTermoScreen } from './screens/AnamneseTermoScreen';
-import { FlashesGalleryScreen } from './screens/FlashesGalleryScreen';
 
 const ScreenRouter: React.FC = () => {
   const { currentScreen } = useAgenda();
@@ -31,10 +29,6 @@ const ScreenRouter: React.FC = () => {
         return <HistoricoTrabalhosScreen />;
       case 'settings':
         return <SettingsScreen />;
-      case 'anamnese':
-        return <AnamneseTermoScreen />;
-      case 'flashes':
-        return <FlashesGalleryScreen />;
       default:
         return <MainScreen />;
     }

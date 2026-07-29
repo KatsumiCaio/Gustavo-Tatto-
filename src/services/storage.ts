@@ -1,9 +1,7 @@
-import { Tatuagem, Cliente, Anamnese, FlashArt } from '../types';
+import { Tatuagem, Cliente } from '../types';
 
 const TATUAGENS_KEY = 'tatuagens_data';
 const CLIENTES_KEY = 'clientes_data';
-const ANAMNESES_KEY = 'anamneses_data';
-const FLASHES_KEY = 'flashes_data';
 const INITIALIZED_KEY = 'app_initialized_v2';
 
 const DB_NAME = 'GustavoTattooDB';
@@ -75,50 +73,6 @@ const sampleTatuagens: Tatuagem[] = [
   },
 ];
 
-const sampleFlashes: FlashArt[] = [
-  {
-    id: 'f1',
-    titulo: 'Cobra Imperial & Adaga',
-    estilo: 'Blackwork',
-    tamanhoCm: '12 x 7 cm',
-    preco: 450,
-    status: 'disponivel',
-    imagem: 'https://images.unsplash.com/photo-1562962230-16e4623d36e6?auto=format&fit=crop&w=600&q=80',
-    descricao: 'Desenho exclusivo em blackwork pesado com detalhes pontilhados e sombras marcantes.',
-  },
-  {
-    id: 'f2',
-    titulo: 'Rosa Botânica Minimalista',
-    estilo: 'Fine Line',
-    tamanhoCm: '8 x 4 cm',
-    preco: 300,
-    status: 'disponivel',
-    imagem: 'https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?auto=format&fit=crop&w=600&q=80',
-    descricao: 'Linhas extra finas e delicadas com sombreamento suave.',
-  },
-  {
-    id: 'f3',
-    titulo: 'Tigre Oriental Neotrad',
-    estilo: 'Neotradicional',
-    tamanhoCm: '16 x 10 cm',
-    preco: 800,
-    status: 'reservado',
-    clienteReservado: 'Mariana Oliveira',
-    imagem: 'https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?auto=format&fit=crop&w=600&q=80',
-    descricao: 'Composição oriental cheia de movimento e contraste elevado.',
-  },
-  {
-    id: 'f4',
-    titulo: 'Crânio Barco Pirata',
-    estilo: 'Old School',
-    tamanhoCm: '10 x 10 cm',
-    preco: 500,
-    status: 'disponivel',
-    imagem: 'https://images.unsplash.com/photo-1542382257-80dedb725088?auto=format&fit=crop&w=600&q=80',
-    descricao: 'Estilo tradicional americano com traço firme e preto sólido.',
-  },
-];
-
 // Helper to interact with IndexedDB as a persistent backup store
 function openIDB(): Promise<IDBDatabase | null> {
   return new Promise((resolve) => {
@@ -179,15 +133,13 @@ export const StorageService = {
         // Very first launch ever: seed sample data
         this.saveClientes(sampleClientes);
         this.saveTatuagens(sampleTatuagens);
-        this.saveFlashes(sampleFlashes);
-        this.saveAnamneses([]);
         localStorage.setItem(INITIALIZED_KEY, 'true');
         saveIDB(INITIALIZED_KEY, 'true');
         return;
       }
 
       // If already initialized, restore from IndexedDB if LocalStorage was lost
-      const keys = [CLIENTES_KEY, TATUAGENS_KEY, ANAMNESES_KEY, FLASHES_KEY];
+      const keys = [CLIENTES_KEY, TATUAGENS_KEY];
       for (const k of keys) {
         const lsData = localStorage.getItem(k);
         if (lsData === null) {
@@ -254,59 +206,9 @@ export const StorageService = {
     saveIDB(INITIALIZED_KEY, 'true');
   },
 
-  getAnamneses(): Anamnese[] {
-    try {
-      const data = localStorage.getItem(ANAMNESES_KEY);
-      if (data === null || data === undefined) {
-        return [];
-      }
-      return JSON.parse(data);
-    } catch (e) {
-      console.error('Error reading anamneses:', e);
-      return [];
-    }
-  },
-
-  saveAnamneses(anamneses: Anamnese[]): void {
-    try {
-      localStorage.setItem(ANAMNESES_KEY, JSON.stringify(anamneses));
-      localStorage.setItem(INITIALIZED_KEY, 'true');
-    } catch (e) {
-      console.error('Error saving anamneses to localStorage:', e);
-    }
-    saveIDB(ANAMNESES_KEY, anamneses);
-    saveIDB(INITIALIZED_KEY, 'true');
-  },
-
-  getFlashes(): FlashArt[] {
-    try {
-      const data = localStorage.getItem(FLASHES_KEY);
-      if (data === null || data === undefined) {
-        return [];
-      }
-      return JSON.parse(data);
-    } catch (e) {
-      console.error('Error reading flashes:', e);
-      return [];
-    }
-  },
-
-  saveFlashes(flashes: FlashArt[]): void {
-    try {
-      localStorage.setItem(FLASHES_KEY, JSON.stringify(flashes));
-      localStorage.setItem(INITIALIZED_KEY, 'true');
-    } catch (e) {
-      console.error('Error saving flashes to localStorage:', e);
-    }
-    saveIDB(FLASHES_KEY, flashes);
-    saveIDB(INITIALIZED_KEY, 'true');
-  },
-
   clearAll(): void {
     this.saveClientes([]);
     this.saveTatuagens([]);
-    this.saveAnamneses([]);
-    this.saveFlashes([]);
     try {
       localStorage.setItem(INITIALIZED_KEY, 'true');
     } catch (e) {

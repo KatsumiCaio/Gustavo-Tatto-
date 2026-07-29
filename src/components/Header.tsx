@@ -17,8 +17,6 @@ const titlesMap: Record<ScreenName, string> = {
   lista_clientes: 'Histórico por Cliente',
   historico_trabalhos: 'Histórico de Trabalhos',
   settings: 'Configurações & Resumo',
-  anamnese: 'Anamnese & Termo',
-  flashes: 'Galeria de Flashes & Projetos',
 };
 
 export const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {

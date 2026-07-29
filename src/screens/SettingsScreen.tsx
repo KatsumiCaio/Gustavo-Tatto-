@@ -5,7 +5,7 @@ import { Trash2, History, Download, Upload, RefreshCw, AlertTriangle, CheckCircl
 import { ConfirmModal } from '../components/ConfirmModal';
 
 export const SettingsScreen: React.FC = () => {
-  const { tatuagens, clientes, anamneses, flashes, clearAllData, reloadData, navigate } = useAgenda();
+  const { tatuagens, clientes, clearAllData, reloadData, navigate } = useAgenda();
 
   const [syncKey, setSyncKey] = useState('');
   const [feedbackMsg, setFeedbackMsg] = useState('');
@@ -42,8 +42,6 @@ export const SettingsScreen: React.FC = () => {
       timestamp: new Date().toISOString(),
       clientes,
       tatuagens,
-      anamneses,
-      flashes,
     };
     const jsonStr = JSON.stringify(backupData, null, 2);
     const blob = new Blob([jsonStr], { type: 'application/json' });
@@ -67,8 +65,6 @@ export const SettingsScreen: React.FC = () => {
         if (parsed && typeof parsed === 'object') {
           if (Array.isArray(parsed.clientes)) StorageService.saveClientes(parsed.clientes);
           if (Array.isArray(parsed.tatuagens)) StorageService.saveTatuagens(parsed.tatuagens);
-          if (Array.isArray(parsed.anamneses)) StorageService.saveAnamneses(parsed.anamneses);
-          if (Array.isArray(parsed.flashes)) StorageService.saveFlashes(parsed.flashes);
           
           reloadData();
           setFeedbackMsg('Todos os dados e backups foram restaurados com sucesso!');

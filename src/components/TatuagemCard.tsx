@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tatuagem } from '../types';
 import { useAgenda } from '../contexts/AgendaContext';
-import { Clock, MapPin, DollarSign, Phone, Edit2, Trash2, CheckCircle2, XCircle, AlertCircle, Image as ImageIcon, MessageSquare, ShieldAlert } from 'lucide-react';
+import { Clock, MapPin, DollarSign, Phone, Edit2, Trash2, CheckCircle2, XCircle, AlertCircle, Image as ImageIcon, MessageSquare } from 'lucide-react';
 
 interface TatuagemCardProps {
   tatuagem: Tatuagem;
@@ -141,17 +141,8 @@ export const TatuagemCard: React.FC<TatuagemCardProps> = ({
           )}
         </div>
 
-        {/* WhatsApp Reminder & Anamnese Buttons */}
+        {/* WhatsApp Reminder Button */}
         <div className="flex items-center gap-1.5">
-          <button
-            onClick={() => navigate('anamnese', { clienteNome: tatuagem.cliente })}
-            className="inline-flex items-center justify-center gap-1 bg-[#1C1C1C] hover:bg-[#3A3A3A] text-[#FF6B35] border border-[#3A3A3A] font-bold text-xs py-1.5 px-2.5 rounded-xl transition-all"
-            title="Preencher Ficha de Anamnese ou Enviar Cuidados"
-          >
-            <ShieldAlert size={14} />
-            <span className="hidden sm:inline">Anamnese</span>
-          </button>
-
           {tatuagem.telefone && (
             <a
               href={getReminderWhatsAppUrl()}

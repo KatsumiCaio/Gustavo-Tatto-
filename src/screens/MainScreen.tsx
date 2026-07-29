@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAgenda } from '../contexts/AgendaContext';
-import { Calendar, UserPlus, PlusCircle, History, Settings, DollarSign, Users, Clock, Sparkles, ShieldAlert, Smartphone, Apple } from 'lucide-react';
+import { Calendar, UserPlus, PlusCircle, History, DollarSign, Users, Clock, Sparkles, Smartphone, Apple } from 'lucide-react';
 import { InstallAppModal } from '../components/InstallAppModal';
 
 export const MainScreen: React.FC = () => {
@@ -42,22 +42,6 @@ export const MainScreen: React.FC = () => {
       screen: 'cadastro_cliente' as const,
       icon: UserPlus,
       color: 'from-[#E63946] to-[#C1121F]',
-    },
-    {
-      id: 'anamnese',
-      title: 'Anamnese & Termo',
-      desc: 'Checklist de saúde e cuidados pós-tatuagem',
-      screen: 'anamnese' as const,
-      icon: ShieldAlert,
-      color: 'from-[#25D366] to-[#059669]',
-    },
-    {
-      id: 'flashes',
-      title: 'Galeria de Flashes',
-      desc: 'Projetos disponíveis com preço e tamanho',
-      screen: 'flashes' as const,
-      icon: Sparkles,
-      color: 'from-[#7B2CBF] to-[#5A189A]',
     },
     {
       id: 'historico',

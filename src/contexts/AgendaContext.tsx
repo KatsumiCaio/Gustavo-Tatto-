@@ -1,12 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Tatuagem, Cliente, Anamnese, FlashArt, ScreenName, NavigationParams } from '../types';
+import { Tatuagem, Cliente, ScreenName, NavigationParams } from '../types';
 import { StorageService } from '../services/storage';
 
 interface AgendaContextType {
   tatuagens: Tatuagem[];
   clientes: Cliente[];
-  anamneses: Anamnese[];
-  flashes: FlashArt[];
   currentScreen: ScreenName;
   navParams: NavigationParams;
   navigate: (screen: ScreenName, params?: NavigationParams) => void;
@@ -17,11 +15,6 @@ interface AgendaContextType {
   addCliente: (cliente: Omit<Cliente, 'id'>) => void;
   updateCliente: (id: string, updates: Partial<Cliente>) => void;
   deleteCliente: (id: string) => void;
-  addAnamnese: (anamnese: Omit<Anamnese, 'id'>) => Anamnese;
-  deleteAnamnese: (id: string) => void;
-  addFlash: (flash: Omit<FlashArt, 'id'>) => void;
-  updateFlash: (id: string, updates: Partial<FlashArt>) => void;
-  deleteFlash: (id: string) => void;
   clearAllData: () => void;
   reloadData: () => void;
   getTatuagensForDate: (date: Date) => Tatuagem[];
@@ -34,8 +27,6 @@ const AgendaContext = createContext<AgendaContextType | undefined>(undefined);
 export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [tatuagens, setTatuagens] = useState<Tatuagem[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
-  const [anamneses, setAnamneses] = useState<Anamnese[]>([]);
-  const [flashes, setFlashes] = useState<FlashArt[]>([]);
   const [currentScreen, setCurrentScreen] = useState<ScreenName>('main');
   const [navParams, setNavParams] = useState<NavigationParams>({});
   const [history, setHistory] = useState<{ screen: ScreenName; params: NavigationParams }[]>([]);
@@ -51,12 +42,8 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const loadAllData = () => {
     const loadedTats = StorageService.getTatuagens();
     const loadedClis = StorageService.getClientes();
-    const loadedAnams = StorageService.getAnamneses();
-    const loadedFlashes = StorageService.getFlashes();
     setTatuagens(loadedTats);
     setClientes(loadedClis);
-    setAnamneses(loadedAnams);
-    setFlashes(loadedFlashes);
   };
 
   const navigate = (screen: ScreenName, params: NavigationParams = {}) => {
@@ -143,51 +130,10 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     StorageService.saveClientes(updated);
   };
 
-  const addAnamnese = (anamneseData: Omit<Anamnese, 'id'>): Anamnese => {
-    const newAnamnese: Anamnese = {
-      ...anamneseData,
-      id: 'anam_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-    };
-    const updated = [newAnamnese, ...anamneses];
-    setAnamneses(updated);
-    StorageService.saveAnamneses(updated);
-    return newAnamnese;
-  };
-
-  const deleteAnamnese = (id: string) => {
-    const updated = anamneses.filter(a => a.id !== id);
-    setAnamneses(updated);
-    StorageService.saveAnamneses(updated);
-  };
-
-  const addFlash = (flashData: Omit<FlashArt, 'id'>) => {
-    const newFlash: FlashArt = {
-      ...flashData,
-      id: 'flash_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-    };
-    const updated = [newFlash, ...flashes];
-    setFlashes(updated);
-    StorageService.saveFlashes(updated);
-  };
-
-  const updateFlash = (id: string, updates: Partial<FlashArt>) => {
-    const updated = flashes.map(f => (f.id === id ? { ...f, ...updates } : f));
-    setFlashes(updated);
-    StorageService.saveFlashes(updated);
-  };
-
-  const deleteFlash = (id: string) => {
-    const updated = flashes.filter(f => f.id !== id);
-    setFlashes(updated);
-    StorageService.saveFlashes(updated);
-  };
-
   const clearAllData = () => {
     StorageService.clearAll();
     setTatuagens([]);
     setClientes([]);
-    setAnamneses([]);
-    setFlashes([]);
   };
 
   const reloadData = () => {
@@ -238,8 +184,6 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       value={{
         tatuagens,
         clientes,
-        anamneses,
-        flashes,
         currentScreen,
         navParams,
         navigate,
@@ -250,11 +194,6 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         addCliente,
         updateCliente,
         deleteCliente,
-        addAnamnese,
-        deleteAnamnese,
-        addFlash,
-        updateFlash,
-        deleteFlash,
         clearAllData,
         reloadData,
         getTatuagensForDate,
