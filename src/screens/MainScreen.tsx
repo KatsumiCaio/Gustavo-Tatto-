@@ -97,18 +97,18 @@ export const MainScreen: React.FC = () => {
       </div>
 
       {/* Main Grid Menu Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 my-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 my-auto">
         {menuItems.map(item => {
           const IconComponent = item.icon;
           return (
             <button
               key={item.id}
               onClick={() => navigate(item.screen)}
-              className="group relative bg-[#2D2D2D] hover:bg-[#333333] border border-[#3A3A3A] hover:border-[#FF6B35] rounded-3xl p-6 text-left transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-[#FF6B35]/10 flex flex-col justify-between min-h-[160px] overflow-hidden"
+              className="group relative bg-[#2D2D2D] hover:bg-[#333333] border border-[#3A3A3A] hover:border-[#FF6B35] rounded-3xl p-5 sm:p-6 text-left transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-[#FF6B35]/10 flex flex-col justify-between min-h-[150px] overflow-hidden"
             >
               <div className="flex items-start justify-between">
-                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform`}>
-                  <IconComponent size={28} />
+                <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform`}>
+                  <IconComponent size={26} />
                 </div>
                 {item.badge && (
                   <span className="bg-[#FF6B35] text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-md animate-pulse">
@@ -118,7 +118,7 @@ export const MainScreen: React.FC = () => {
               </div>
 
               <div className="mt-4">
-                <h2 className="text-xl font-bold text-[#F5F5F5] group-hover:text-[#FF6B35] transition-colors">
+                <h2 className="text-lg sm:text-xl font-bold text-[#F5F5F5] group-hover:text-[#FF6B35] transition-colors">
                   {item.title}
                 </h2>
                 <p className="text-xs text-[#999999] mt-1 font-medium">
@@ -131,8 +131,8 @@ export const MainScreen: React.FC = () => {
       </div>
 
       {/* Quick Dashboard Stat Footer */}
-      <div className="grid grid-cols-3 gap-3 bg-[#2A2A2A] border border-[#3A3A3A] p-4 rounded-3xl shadow-lg">
-        <div className="text-center p-2 border-r border-[#3A3A3A]">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-[#2A2A2A] border border-[#3A3A3A] p-4 rounded-3xl shadow-lg">
+        <div className="text-center p-2 border-b sm:border-b-0 sm:border-r border-[#3A3A3A]">
           <div className="flex items-center justify-center gap-1 text-[#FF6B35] text-xs font-semibold mb-1">
             <Clock size={14} /> Agendados
           </div>
@@ -141,11 +141,11 @@ export const MainScreen: React.FC = () => {
           </span>
         </div>
 
-        <div className="text-center p-2 border-r border-[#3A3A3A]">
+        <div className="text-center p-2 border-b sm:border-b-0 sm:border-r border-[#3A3A3A]">
           <div className="flex items-center justify-center gap-1 text-[#4CAF50] text-xs font-semibold mb-1">
             <DollarSign size={14} /> Concluídos
           </div>
-          <span className="text-xl sm:text-2xl font-black text-[#4CAF50]">
+          <span className="text-lg sm:text-2xl font-black text-[#4CAF50]">
             {formatCurrency(faturamentoTotal)}
           </span>
         </div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { AgendaProvider, useAgenda } from './contexts/AgendaContext';
 import { Header } from './components/Header';
+import { BottomNav } from './components/BottomNav';
 import { MainScreen } from './screens/MainScreen';
 import { AgendaScreen } from './screens/AgendaScreen';
 import { AddTatuagemScreen } from './screens/AddTatuagemScreen';
@@ -40,11 +41,12 @@ const ScreenRouter: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#1C1C1C] text-[#F5F5F5] flex flex-col">
+    <div className="min-h-screen bg-[#1C1C1C] text-[#F5F5F5] flex flex-col selection:bg-[#FF6B35] selection:text-white">
       <Header />
-      <main className="flex-1 pb-12">
+      <main className="flex-1 pb-24 md:pb-12">
         {renderScreen()}
       </main>
+      <BottomNav />
     </div>
   );
 };

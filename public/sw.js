@@ -32,19 +32,27 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Network first strategy with fallback to cache
   if (event.request.method !== 'GET') return;
+  
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        const resClone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, resClone);
-        });
+        if (response.status === 200) {
+          const resClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, resClone);
+          });
+        }
         return response;
       })
-      .catch(() => {
-        return caches.match(event.request);
+      .catch(async () => {
+        const cachedResponse = await caches.match(event.request);
+        if (cachedResponse) return cachedResponse;
+        
+        // If it's a navigation request and we're offline, return index.html
+        if (event.request.mode === 'navigate') {
+          return caches.match('/index.html');
+        }
       })
   );
 });
