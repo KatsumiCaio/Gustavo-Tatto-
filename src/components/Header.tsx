@@ -3,6 +3,7 @@ import { useAgenda } from '../contexts/AgendaContext';
 import { ScreenName } from '../types';
 import { ArrowLeft, Settings, Smartphone, Bell } from 'lucide-react';
 import { InstallAppModal } from './InstallAppModal';
+import { NotificationPromptModal } from './NotificationPromptModal';
 
 interface HeaderProps {
   title?: string;
@@ -21,8 +22,9 @@ const titlesMap: Record<ScreenName, string> = {
 };
 
 export const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
-  const { currentScreen, unreadNotificacoesCount, navigate, goBack } = useAgenda();
+  const { currentScreen, unreadNotificacoesCount, permissaoNotificacaoState, navigate, goBack } = useAgenda();
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
+  const [isNotifPromptOpen, setIsNotifPromptOpen] = useState(false);
 
   const displayTitle = title || titlesMap[currentScreen] || 'Gustavo Tattoo';
 
@@ -69,13 +71,21 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
           <div className="flex items-center gap-2">
             {/* Bell Notifications Button */}
             <button
-              onClick={() => navigate('notificacoes')}
+              onClick={() => {
+                if (permissaoNotificacaoState !== 'granted') {
+                  setIsNotifPromptOpen(true);
+                } else {
+                  navigate('notificacoes');
+                }
+              }}
               className={`p-2.5 rounded-lg border transition-all relative ${
                 currentScreen === 'notificacoes'
                   ? 'bg-[#FF6B35] text-white border-[#FF6B35]'
+                  : permissaoNotificacaoState !== 'granted'
+                  ? 'bg-[#FFB703]/20 text-[#FFB703] border-[#FFB703]/40 hover:bg-[#FFB703]/30'
                   : 'bg-[#2A2A2A] text-[#999999] border-transparent hover:text-[#FF6B35] hover:bg-[#3A3A3A]'
               }`}
-              title="Aba de Notificações"
+              title={permissaoNotificacaoState !== 'granted' ? 'Ativar Notificações no Celular' : 'Aba de Notificações'}
             >
               <Bell size={20} />
               {unreadNotificacoesCount > 0 && (
@@ -119,6 +129,11 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
       <InstallAppModal
         isOpen={isInstallModalOpen}
         onClose={() => setIsInstallModalOpen(false)}
+      />
+
+      <NotificationPromptModal
+        isOpen={isNotifPromptOpen}
+        onClose={() => setIsNotifPromptOpen(false)}
       />
     </>
   );

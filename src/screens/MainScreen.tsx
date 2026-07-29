@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useAgenda } from '../contexts/AgendaContext';
-import { Calendar, UserPlus, PlusCircle, History, DollarSign, Users, Clock, Sparkles, Smartphone, Apple, Bell } from 'lucide-react';
+import { Calendar, UserPlus, PlusCircle, History, DollarSign, Users, Clock, Sparkles, Smartphone, Apple, Bell, ShieldCheck } from 'lucide-react';
 import { InstallAppModal } from '../components/InstallAppModal';
+import { NotificationPromptModal } from '../components/NotificationPromptModal';
 
 export const MainScreen: React.FC = () => {
-  const { navigate, tatuagens, clientes, unreadNotificacoesCount } = useAgenda();
+  const { navigate, tatuagens, clientes, unreadNotificacoesCount, permissaoNotificacaoState } = useAgenda();
   const [isInstallOpen, setIsInstallOpen] = useState(false);
+  const [isNotifPromptOpen, setIsNotifPromptOpen] = useState(false);
 
   const todayStr = new Date().toISOString().split('T')[0];
   const agendamentosHoje = tatuagens.filter(t => t.data === todayStr && t.status === 'agendado');
@@ -76,16 +78,31 @@ export const MainScreen: React.FC = () => {
           Gerenciamento prático e moderno de agendamentos, clientes e faturamento
         </p>
 
-        {/* PWA / iPhone App Download Banner */}
-        <div className="mt-4 inline-flex items-center gap-2 bg-gradient-to-r from-[#FF6B35]/20 via-[#2D2D2D] to-[#1C1C1C] border border-[#FF6B35]/40 p-2.5 px-4 rounded-2xl text-xs text-[#F5F5F5] shadow-lg">
-          <Apple size={16} className="text-[#FF6B35]" />
-          <span>Quer usar como aplicativo no seu <strong>iPhone / Celular</strong>?</span>
-          <button
-            onClick={() => setIsInstallOpen(true)}
-            className="ml-1 bg-[#FF6B35] hover:bg-[#E85D2A] text-white font-bold px-3 py-1 rounded-xl text-[11px] transition-all flex items-center gap-1 shadow-md"
-          >
-            <Smartphone size={13} /> Instalar App
-          </button>
+        {/* PWA / iPhone App Download Banner & Notification Banner */}
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#FF6B35]/20 via-[#2D2D2D] to-[#1C1C1C] border border-[#FF6B35]/40 p-2.5 px-4 rounded-2xl text-xs text-[#F5F5F5] shadow-lg">
+            <Apple size={16} className="text-[#FF6B35]" />
+            <span>Quer usar como aplicativo no seu <strong>iPhone / Celular</strong>?</span>
+            <button
+              onClick={() => setIsInstallOpen(true)}
+              className="ml-1 bg-[#FF6B35] hover:bg-[#E85D2A] text-white font-bold px-3 py-1 rounded-xl text-[11px] transition-all flex items-center gap-1 shadow-md"
+            >
+              <Smartphone size={13} /> Instalar App
+            </button>
+          </div>
+
+          {permissaoNotificacaoState !== 'granted' && (
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#FFB703]/20 via-[#2D2D2D] to-[#1C1C1C] border border-[#FFB703]/50 p-2.5 px-4 rounded-2xl text-xs text-[#F5F5F5] shadow-lg animate-fade-in">
+              <Bell size={16} className="text-[#FFB703] animate-bounce" />
+              <span>Receba os lembretes direto no seu <strong>Celular</strong>!</span>
+              <button
+                onClick={() => setIsNotifPromptOpen(true)}
+                className="ml-1 bg-[#FFB703] hover:bg-[#e0a100] text-black font-extrabold px-3 py-1 rounded-xl text-[11px] transition-all flex items-center gap-1 shadow-md"
+              >
+                <ShieldCheck size={13} /> Ativar Notificações
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -154,6 +171,7 @@ export const MainScreen: React.FC = () => {
       </div>
 
       <InstallAppModal isOpen={isInstallOpen} onClose={() => setIsInstallOpen(false)} />
+      <NotificationPromptModal isOpen={isNotifPromptOpen} onClose={() => setIsNotifPromptOpen(false)} />
     </div>
   );
 };

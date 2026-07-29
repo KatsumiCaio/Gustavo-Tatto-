@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import { Tatuagem, Cliente, Notificacao, ScreenName, NavigationParams } from '../types';
 import { StorageService } from '../services/storage';
+import { SystemNotificationService } from '../utils/notificationSystem';
 
 export function calcularDataHoraNotificacao(
   data: string,
@@ -70,6 +71,9 @@ interface AgendaContextType {
   unreadNotificacoesCount: number;
   currentScreen: ScreenName;
   navParams: NavigationParams;
+  permissaoNotificacaoState: 'granted' | 'denied' | 'default';
+  solicitarPermissaoNotificacaoSistema: () => Promise<boolean>;
+  dispararNotificacaoTeste: () => boolean;
   navigate: (screen: ScreenName, params?: NavigationParams) => void;
   goBack: () => void;
   addTatuagem: (tatuagem: Omit<Tatuagem, 'id'>) => void;
@@ -97,14 +101,74 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [currentScreen, setCurrentScreen] = useState<ScreenName>('main');
   const [navParams, setNavParams] = useState<NavigationParams>({});
   const [history, setHistory] = useState<{ screen: ScreenName; params: NavigationParams }[]>([]);
+  const [permissaoNotificacaoState, setPermissaoNotificacaoState] = useState<'granted' | 'denied' | 'default'>(
+    SystemNotificationService.getPermissionState() as any
+  );
+
+  const firedNotifIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const initAndLoad = async () => {
       await StorageService.initStorage();
       loadAllData();
+      setPermissaoNotificacaoState(SystemNotificationService.getPermissionState() as any);
     };
     initAndLoad();
   }, []);
+
+  // Background interval check for system alerts on mobile/browser
+  useEffect(() => {
+    const checkScheduledNotifications = () => {
+      if (notificacoes.length === 0) return;
+
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      const hh = String(now.getHours()).padStart(2, '0');
+      const min = String(now.getMinutes()).padStart(2, '0');
+      const currentNowIso = `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+
+      notificacoes.forEach(n => {
+        if (!n.dataHoraNotificacao) return;
+
+        // If notification time is reached or passed (within the last 24h) and not yet fired in system
+        if (n.dataHoraNotificacao <= currentNowIso && !firedNotifIds.current.has(n.id)) {
+          firedNotifIds.current.add(n.id);
+          SystemNotificationService.sendNotification({
+            title: `📅 Lembrete Tattoo: ${n.cliente}`,
+            body: n.mensagem,
+            tag: n.id,
+          });
+        }
+      });
+    };
+
+    checkScheduledNotifications();
+    const interval = setInterval(checkScheduledNotifications, 15000); // Check every 15s
+    return () => clearInterval(interval);
+  }, [notificacoes]);
+
+  const solicitarPermissaoNotificacaoSistema = async (): Promise<boolean> => {
+    const ok = await SystemNotificationService.requestPermission();
+    setPermissaoNotificacaoState(SystemNotificationService.getPermissionState() as any);
+    if (ok) {
+      SystemNotificationService.sendNotification({
+        title: '🔔 Notificações Ativadas!',
+        body: 'Você receberá os lembretes das sessões de tatuagem diretamente na tela do seu celular.',
+        tag: 'welcome-notif',
+      });
+    }
+    return ok;
+  };
+
+  const dispararNotificacaoTeste = (): boolean => {
+    return SystemNotificationService.sendNotification({
+      title: '⚡ Teste de Notificação no Celular',
+      body: 'As notificações do sistema Gustavo Tattoo estão funcionando perfeitamente no seu dispositivo!',
+      tag: 'test-notif-' + Date.now(),
+    });
+  };
 
   const loadAllData = () => {
     const loadedTats = StorageService.getTatuagens();
@@ -341,6 +405,9 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         unreadNotificacoesCount,
         currentScreen,
         navParams,
+        permissaoNotificacaoState,
+        solicitarPermissaoNotificacaoSistema,
+        dispararNotificacaoTeste,
         navigate,
         goBack,
         addTatuagem,

@@ -1,13 +1,31 @@
 import React, { useState } from 'react';
 import { useAgenda } from '../contexts/AgendaContext';
-import { Bell, Clock, Calendar, CheckCircle2, Trash2, ArrowLeft, CheckCheck, Sparkles, AlertCircle } from 'lucide-react';
+import { Bell, Clock, Calendar, CheckCircle2, Trash2, ArrowLeft, CheckCheck, Sparkles, AlertCircle, Smartphone, Send, ShieldCheck } from 'lucide-react';
 import { ConfirmModal } from '../components/ConfirmModal';
 
 export const NotificacoesScreen: React.FC = () => {
-  const { notificacoes, unreadNotificacoesCount, marcarNotificacaoLida, marcarTodasNotificacoesLidas, deleteNotificacao, navigate, goBack } = useAgenda();
+  const {
+    notificacoes,
+    unreadNotificacoesCount,
+    permissaoNotificacaoState,
+    solicitarPermissaoNotificacaoSistema,
+    dispararNotificacaoTeste,
+    marcarNotificacaoLida,
+    marcarTodasNotificacoesLidas,
+    deleteNotificacao,
+    navigate,
+    goBack,
+  } = useAgenda();
 
   const [filter, setFilter] = useState<'todas' | 'nao_lidas'>('todas');
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [testSentMsg, setTestSentMsg] = useState(false);
+
+  const handleTestNotification = () => {
+    const ok = dispararNotificacaoTeste();
+    setTestSentMsg(true);
+    setTimeout(() => setTestSentMsg(false), 4000);
+  };
 
   const filteredNotifs = notificacoes.filter(n => {
     if (filter === 'nao_lidas') return !n.lida;
@@ -57,6 +75,63 @@ export const NotificacoesScreen: React.FC = () => {
             <CheckCheck size={16} />
             <span>Marcar todas como lidas</span>
           </button>
+        )}
+      </div>
+
+      {/* Smartphone Push Notifications Banner */}
+      <div className="bg-gradient-to-r from-[#1E2522] to-[#2B221E] border border-[#FF6B35]/30 p-4 rounded-2xl shadow-md space-y-3">
+        <div className="flex items-start justify-between gap-3 flex-wrap sm:flex-nowrap">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#25D366]/20 text-[#25D366] border border-[#25D366]/30 flex items-center justify-center shrink-0 mt-0.5">
+              <Smartphone size={22} />
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-[#F5F5F5]">
+                  Notificações do Sistema no Celular
+                </h3>
+                {permissaoNotificacaoState === 'granted' ? (
+                  <span className="bg-[#25D366]/20 text-[#25D366] border border-[#25D366]/30 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <ShieldCheck size={12} /> Ativadas no Celular
+                  </span>
+                ) : (
+                  <span className="bg-[#FFB703]/20 text-[#FFB703] border border-[#FFB703]/30 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <AlertCircle size={12} /> Permissão Pendente
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-[#CCCCCC] leading-relaxed">
+                Receba alertas sonoros e notificações popup no topo do seu celular ou computador sempre que um lembrete vencer.
+              </p>
+            </div>
+          </div>
+
+          <div className="shrink-0 flex items-center gap-2">
+            {permissaoNotificacaoState !== 'granted' ? (
+              <button
+                onClick={solicitarPermissaoNotificacaoSistema}
+                className="bg-[#FF6B35] hover:bg-[#E63946] text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all shadow-md shadow-[#FF6B35]/20 flex items-center gap-1.5"
+              >
+                <Bell size={15} />
+                <span>Ativar no Celular</span>
+              </button>
+            ) : (
+              <button
+                onClick={handleTestNotification}
+                className="bg-[#1C1C1C] hover:bg-[#25D366] text-[#25D366] hover:text-white border border-[#25D366]/40 text-xs font-bold px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-1.5"
+              >
+                <Send size={14} />
+                <span>Testar Notificação</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {testSentMsg && (
+          <div className="text-xs font-bold text-[#25D366] bg-[#25D366]/10 border border-[#25D366]/30 p-2.5 rounded-xl flex items-center gap-2 animate-fade-in">
+            <CheckCircle2 size={16} />
+            <span>Notificação enviada! Verifique a barra de notificações do seu aparelho/navegador.</span>
+          </div>
         )}
       </div>
 
