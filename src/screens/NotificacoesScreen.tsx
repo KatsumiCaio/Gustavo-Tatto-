@@ -101,7 +101,7 @@ export const NotificacoesScreen: React.FC = () => {
                 )}
               </div>
               <p className="text-xs text-[#CCCCCC] leading-relaxed">
-                Receba alertas sonoros e notificações popup no topo do seu celular ou computador sempre que um lembrete vencer.
+                As notificações são entregues pelo <strong>Service Worker</strong> direto no seu celular/computador, mesmo com o aplicativo <strong>em segundo plano</strong> ou tela bloqueada.
               </p>
             </div>
           </div>

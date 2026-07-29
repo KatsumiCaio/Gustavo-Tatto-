@@ -116,8 +116,12 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     initAndLoad();
   }, []);
 
-  // Background interval check for system alerts on mobile/browser
+  // Background interval check for system alerts on mobile/browser & Service Worker sync
   useEffect(() => {
+    if (notificacoes.length > 0) {
+      SystemNotificationService.syncScheduledWithServiceWorker(notificacoes);
+    }
+
     const checkScheduledNotifications = () => {
       if (notificacoes.length === 0) return;
 
@@ -132,7 +136,7 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       notificacoes.forEach(n => {
         if (!n.dataHoraNotificacao) return;
 
-        // If notification time is reached or passed (within the last 24h) and not yet fired in system
+        // If notification time is reached or passed and not yet fired in system
         if (n.dataHoraNotificacao <= currentNowIso && !firedNotifIds.current.has(n.id)) {
           firedNotifIds.current.add(n.id);
           SystemNotificationService.sendNotification({

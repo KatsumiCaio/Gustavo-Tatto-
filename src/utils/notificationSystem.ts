@@ -80,15 +80,15 @@ export const SystemNotificationService = {
     }
 
     try {
-      // Try Service Worker notification if registered for PWA
-      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      // Try Service Worker notification first (works when app is backgrounded or open)
+      if ('serviceWorker' in navigator) {
         navigator.serviceWorker.ready.then(reg => {
           reg.showNotification(options.title, {
             body: options.body,
-            icon: '/icon.png',
+            icon: '/pwa-192.svg',
             tag: options.tag || 'tattoo-agenda',
-            badge: '/icon.png',
-            vibrate: [200, 100, 200],
+            badge: '/pwa-192.svg',
+            vibrate: [200, 100, 200, 100, 300],
             data: options.data,
           } as any);
         }).catch(() => {
@@ -101,6 +101,20 @@ export const SystemNotificationService = {
     } catch (err) {
       console.error('Erro ao enviar notificação do sistema:', err);
       return false;
+    }
+  },
+
+  // Sync scheduled notifications with Service Worker background worker
+  syncScheduledWithServiceWorker(notificacoes: any[]) {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(reg => {
+        if (reg.active) {
+          reg.active.postMessage({
+            type: 'SYNC_SCHEDULED_NOTIFICATIONS',
+            payload: notificacoes,
+          });
+        }
+      }).catch(() => {});
     }
   },
 

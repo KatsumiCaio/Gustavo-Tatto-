@@ -60,35 +60,35 @@ export const NotificationPromptModal: React.FC<NotificationPromptModalProps> = (
           <div className="bg-[#25D366]/15 border border-[#25D366]/40 p-4 rounded-2xl text-center space-y-2 animate-fade-in">
             <div className="flex items-center justify-center gap-2 text-[#25D366] font-bold text-sm">
               <CheckCircle2 size={20} />
-              <span>Notificações Ativadas com Sucesso!</span>
+              <span>Notificações em Segundo Plano Ativadas!</span>
             </div>
-            <p className="text-xs text-[#CCCCCC]">
-              Seu dispositivo já está preparado para receber avisos de sessões e lembretes.
+            <p className="text-xs text-[#CCCCCC] leading-relaxed">
+              As notificações funcionarão via Service Worker no seu celular mesmo com o aplicativo em segundo plano ou tela bloqueada.
             </p>
             <button
               onClick={handleTest}
-              className="mt-2 bg-[#25D366] text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-[#1EBE5D] transition-all inline-flex items-center gap-1.5 shadow-md"
+              className="mt-2 bg-[#25D366] text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-[#1EBE5D] transition-all inline-flex items-center gap-1.5 shadow-md"
             >
               <Sparkles size={14} />
-              <span>Enviar Notificação de Teste</span>
+              <span>Enviar Notificação de Teste no Celular</span>
             </button>
             {testSent && (
               <p className="text-[11px] font-semibold text-[#25D366] pt-1">
-                ✓ Notificação enviada! Verifique seu celular.
+                ✓ Notificação de teste enviada para a barra de alertas do aparelho!
               </p>
             )}
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="bg-[#1C1C1C] border border-[#3A3A3A] p-4 rounded-2xl space-y-2 text-xs text-[#CCCCCC]">
+            <div className="bg-[#1C1C1C] border border-[#3A3A3A] p-4 rounded-2xl space-y-2.5 text-xs text-[#CCCCCC]">
               <div className="flex items-center gap-2 text-[#FFB703] font-bold">
                 <ShieldCheck size={16} />
-                <span>Por que ativar?</span>
+                <span>Notificações em 2º Plano (App Fechado)</span>
               </div>
               <ul className="space-y-1.5 list-disc list-inside text-[#AAAAAA]">
-                <li>Avisos sonoros e popups no horário do lembrete.</li>
-                <li>Evite atrasos com clientes e mantenha sua agenda pontual.</li>
-                <li>Funciona direto no Android, iPhone, PC e Mac.</li>
+                <li><strong className="text-[#F5F5F5]">Em Segundo Plano:</strong> Funciona via Service Worker com o app minimizado ou tela bloqueada.</li>
+                <li><strong className="text-[#F5F5F5]">Avisos Sonoros:</strong> Toca efeito sonoro e vibração ao atingir o horário do lembrete.</li>
+                <li><strong className="text-[#F5F5F5]">Redirecionamento Direto:</strong> Ao tocar na notificação no celular, o app abre direto no agendamento.</li>
               </ul>
             </div>
 
@@ -97,7 +97,7 @@ export const NotificationPromptModal: React.FC<NotificationPromptModalProps> = (
               className="w-full bg-[#FF6B35] hover:bg-[#E63946] text-white text-sm font-bold py-3.5 px-4 rounded-2xl transition-all shadow-lg shadow-[#FF6B35]/25 flex items-center justify-center gap-2 group"
             >
               <Bell size={18} className="group-hover:scale-110 transition-transform" />
-              <span>Permitir e Ativar Notificações</span>
+              <span>Permitir e Ativar no Celular</span>
             </button>
           </div>
         )}
