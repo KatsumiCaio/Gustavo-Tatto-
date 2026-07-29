@@ -5,12 +5,13 @@ import { EditTatuagemModal } from '../components/EditTatuagemModal';
 import { ImageViewerModal } from '../components/ImageViewerModal';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { Tatuagem } from '../types';
-import { History, FileX, ArrowLeft } from 'lucide-react';
+import { History, FileX, ArrowLeft, Search, X } from 'lucide-react';
 
 export const HistoricoTrabalhosScreen: React.FC = () => {
-  const { navParams, tatuagens, deleteTatuagem, updateTatuagem, goBack } = useAgenda();
+  const { navParams, tatuagens, clientes, deleteTatuagem, updateTatuagem, goBack } = useAgenda();
   const clienteNome = navParams.clienteNome;
 
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedTatuagem, setSelectedTatuagem] = useState<Tatuagem | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
@@ -24,6 +25,33 @@ export const HistoricoTrabalhosScreen: React.FC = () => {
     ? tatuagens.filter(t => t.cliente.toLowerCase() === clienteNome.toLowerCase())
     : [...tatuagens]
   ).sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
+
+  // Search filter by client name, phone, or instagram
+  const filteredList = list.filter(t => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return true;
+
+    // Match client name
+    const matchCliente = t.cliente.toLowerCase().includes(term);
+
+    // Match phone (from tattoo or matched client record)
+    const matchTelefone = t.telefone
+      ? (t.telefone.toLowerCase().includes(term) || t.telefone.replace(/\D/g, '').includes(term.replace(/\D/g, '')))
+      : false;
+
+    // Match instagram handle from clients context
+    const clientObj = clientes.find(
+      c => c.nome.toLowerCase() === t.cliente.toLowerCase() || (t.telefone && c.telefone === t.telefone)
+    );
+    const matchInstagram = clientObj?.instagram
+      ? clientObj.instagram.toLowerCase().includes(term)
+      : false;
+
+    // Match description
+    const matchDesc = t.descricao ? t.descricao.toLowerCase().includes(term) : false;
+
+    return matchCliente || matchTelefone || matchInstagram || matchDesc;
+  });
 
   const handleEdit = (tatuagem: Tatuagem) => {
     setSelectedTatuagem(tatuagem);
@@ -62,7 +90,8 @@ export const HistoricoTrabalhosScreen: React.FC = () => {
             {clienteNome ? `Histórico: ${clienteNome}` : 'Histórico Geral de Trabalhos'}
           </h2>
           <p className="text-xs text-[#999999] mt-0.5">
-            {list.length} {list.length === 1 ? 'trabalho registrado' : 'trabalhos registrados'}
+            {filteredList.length} {filteredList.length === 1 ? 'trabalho encontrado' : 'trabalhos encontrados'}
+            {list.length !== filteredList.length ? ` (de ${list.length} no total)` : ''}
           </p>
         </div>
 
@@ -76,10 +105,32 @@ export const HistoricoTrabalhosScreen: React.FC = () => {
         )}
       </div>
 
+      {/* Search Input Bar */}
+      <div className="bg-[#2D2D2D] border border-[#3A3A3A] p-3 rounded-2xl shadow-lg">
+        <div className="relative flex items-center">
+          <Search size={18} className="absolute left-3.5 text-[#999999]" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            placeholder="Pesquisar por nome do cliente, número ou @instagram..."
+            className="w-full bg-[#1C1C1C] border border-[#3A3A3A] focus:border-[#FF6B35] rounded-xl pl-10 pr-9 py-2.5 text-sm text-[#F5F5F5] focus:outline-none placeholder:text-[#888888]"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="absolute right-3.5 p-1 text-[#999999] hover:text-white transition-colors"
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* List */}
       <div className="space-y-4">
-        {list.length > 0 ? (
-          list.map(tatuagem => (
+        {filteredList.length > 0 ? (
+          filteredList.map(tatuagem => (
             <TatuagemCard
               key={tatuagem.id}
               tatuagem={tatuagem}
@@ -98,7 +149,9 @@ export const HistoricoTrabalhosScreen: React.FC = () => {
               Nenhum trabalho encontrado
             </h3>
             <p className="text-xs text-[#999999] max-w-sm">
-              {clienteNome
+              {searchTerm
+                ? `Nenhum trabalho corresponde à busca por "${searchTerm}".`
+                : clienteNome
                 ? `Este cliente (${clienteNome}) ainda não possui trabalhos registrados.`
                 : 'Ainda não há trabalhos ou agendamentos cadastrados no sistema.'}
             </p>

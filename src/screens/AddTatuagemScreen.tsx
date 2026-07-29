@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAgenda } from '../contexts/AgendaContext';
 import { Cliente } from '../types';
 import { compressImage } from '../utils/imageCompressor';
-import { User, UserPlus, Pencil, MapPin, DollarSign, Calendar, Clock, MessageSquare, Camera, X, CheckCircle2, Sparkles } from 'lucide-react';
+import { User, UserPlus, Pencil, MapPin, DollarSign, Calendar, Clock, MessageSquare, Camera, X, CheckCircle2, Sparkles, Search, Instagram, Phone } from 'lucide-react';
 
 export const AddTatuagemScreen: React.FC = () => {
   const { clientes, addTatuagem, updateTatuagem, tatuagens, navParams, navigate } = useAgenda();
@@ -12,6 +12,7 @@ export const AddTatuagemScreen: React.FC = () => {
 
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
+  const [clientSearchTerm, setClientSearchTerm] = useState('');
 
   const [descricao, setDescricao] = useState('');
   const [dateStr, setDateStr] = useState(() => new Date().toISOString().split('T')[0]);
@@ -331,40 +332,94 @@ export const AddTatuagemScreen: React.FC = () => {
               </button>
             </div>
 
-            <div className="p-4 overflow-y-auto divide-y divide-[#3A3A3A]">
-              {clientes.length > 0 ? (
-                clientes.map(cli => (
+            {/* Search Input */}
+            <div className="p-3 border-b border-[#3A3A3A] bg-[#222222]">
+              <div className="relative">
+                <Search size={16} className="absolute left-3 top-2.5 text-[#999999]" />
+                <input
+                  type="text"
+                  value={clientSearchTerm}
+                  onChange={e => setClientSearchTerm(e.target.value)}
+                  placeholder="Pesquisar por nome, número ou @instagram..."
+                  className="w-full bg-[#1C1C1C] border border-[#3A3A3A] focus:border-[#FF6B35] rounded-xl pl-9 pr-3 py-2 text-xs text-[#F5F5F5] focus:outline-none placeholder:text-[#777777]"
+                  autoFocus
+                />
+                {clientSearchTerm && (
+                  <button
+                    onClick={() => setClientSearchTerm('')}
+                    className="absolute right-3 top-2.5 text-[#999999] hover:text-white"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="p-3 overflow-y-auto divide-y divide-[#3A3A3A]/50">
+              {(() => {
+                const term = clientSearchTerm.trim().toLowerCase();
+                const filtered = clientes.filter(cli => {
+                  if (!term) return true;
+                  const matchNome = cli.nome.toLowerCase().includes(term);
+                  const matchTelefone = cli.telefone.toLowerCase().includes(term) || cli.telefone.replace(/\D/g, '').includes(term.replace(/\D/g, ''));
+                  const matchInsta = cli.instagram ? cli.instagram.toLowerCase().includes(term) : false;
+                  return matchNome || matchTelefone || matchInsta;
+                });
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="text-center py-8">
+                      <p className="text-xs text-[#999999] mb-3">
+                        {clientes.length === 0
+                          ? 'Nenhum cliente cadastrado ainda.'
+                          : `Nenhum cliente encontrado para "${clientSearchTerm}".`}
+                      </p>
+                      <button
+                        onClick={() => {
+                          setIsClientModalOpen(false);
+                          navigate('cadastro_cliente');
+                        }}
+                        className="bg-[#FF6B35] text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-[#E63946] transition-colors"
+                      >
+                        + Cadastrar Novo Cliente
+                      </button>
+                    </div>
+                  );
+                }
+
+                return filtered.map(cli => (
                   <button
                     key={cli.id}
                     onClick={() => {
                       setSelectedCliente(cli);
                       setIsClientModalOpen(false);
+                      setClientSearchTerm('');
                     }}
-                    className="w-full py-3 px-2 text-left hover:bg-[#333333] transition-colors rounded-xl flex items-center justify-between group"
+                    className="w-full py-3 px-3 text-left hover:bg-[#333333] transition-colors rounded-xl flex items-center justify-between group"
                   >
-                    <div>
+                    <div className="space-y-0.5">
                       <p className="text-sm font-bold text-[#F5F5F5] group-hover:text-[#FF6B35] transition-colors">
                         {cli.nome}
                       </p>
-                      <p className="text-xs text-[#999999]">{cli.telefone}</p>
+                      <div className="flex items-center gap-3 text-xs text-[#999999]">
+                        {cli.telefone && (
+                          <span className="flex items-center gap-1">
+                            <Phone size={11} className="text-[#888888]" />
+                            {cli.telefone}
+                          </span>
+                        )}
+                        {cli.instagram && (
+                          <span className="flex items-center gap-1 text-[#FF6B35]/80 font-medium">
+                            <Instagram size={11} />
+                            {cli.instagram}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <User size={16} className="text-[#999999] group-hover:text-[#FF6B35]" />
+                    <User size={16} className="text-[#999999] group-hover:text-[#FF6B35] shrink-0 ml-2" />
                   </button>
-                ))
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-xs text-[#999999] mb-3">Nenhum cliente cadastrado ainda.</p>
-                  <button
-                    onClick={() => {
-                      setIsClientModalOpen(false);
-                      navigate('cadastro_cliente');
-                    }}
-                    className="bg-[#FF6B35] text-white text-xs font-bold px-4 py-2 rounded-xl"
-                  >
-                    + Cadastrar Novo Cliente
-                  </button>
-                </div>
-              )}
+                ));
+              })()}
             </div>
           </div>
         </div>

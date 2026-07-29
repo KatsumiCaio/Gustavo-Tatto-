@@ -14,10 +14,14 @@ export const ListaClientesScreen: React.FC = () => {
   const [editInstagram, setEditInstagram] = useState('');
   const [editObservacoes, setEditObservacoes] = useState('');
 
-  const filteredClientes = clientes.filter(c =>
-    c.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.telefone.includes(searchTerm)
-  );
+  const filteredClientes = clientes.filter(c => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return true;
+    const matchNome = c.nome.toLowerCase().includes(term);
+    const matchTelefone = c.telefone.toLowerCase().includes(term) || c.telefone.replace(/\D/g, '').includes(term.replace(/\D/g, ''));
+    const matchInstagram = c.instagram ? c.instagram.toLowerCase().includes(term) : false;
+    return matchNome || matchTelefone || matchInstagram;
+  });
 
   const getClientTattooCount = (nome: string) => {
     return tatuagens.filter(t => t.cliente.toLowerCase() === nome.toLowerCase()).length;
@@ -76,7 +80,7 @@ export const ListaClientesScreen: React.FC = () => {
             type="text"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            placeholder="Buscar cliente por nome ou telefone..."
+            placeholder="Buscar cliente por nome, número ou @instagram..."
             className="w-full bg-[#2D2D2D] border border-[#3A3A3A] focus:border-[#FF6B35] rounded-2xl pl-10 pr-4 py-3 text-sm text-[#F5F5F5] focus:outline-none shadow-lg"
           />
         </div>
