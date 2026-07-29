@@ -78,55 +78,88 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Receive scheduled notifications list from main app thread
+// Handle background messages (schedule delayed notifications, test alerts, etc)
 self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SYNC_SCHEDULED_NOTIFICATIONS') {
+  if (!event.data) return;
+
+  if (event.data.type === 'SYNC_SCHEDULED_NOTIFICATIONS') {
     scheduledNotifs = event.data.payload || [];
-    checkBackgroundNotifications();
-  } else if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
+    scheduleTimersInServiceWorker();
+  } else if (event.data.type === 'SHOW_NOTIFICATION') {
     const { title, body, tag, data } = event.data.payload;
-    self.registration.showNotification(title, {
-      body,
-      tag: tag || 'tattoo-agenda',
-      icon: '/pwa-192.svg',
-      badge: '/pwa-192.svg',
-      vibrate: [200, 100, 200],
-      data,
-    });
+    showSWNotification(title, body, tag, data);
+  } else if (event.data.type === 'SCHEDULE_DELAYED') {
+    const { title, body, tag, delayMs, data } = event.data.payload;
+    setTimeout(() => {
+      showSWNotification(title, body, tag, data);
+    }, delayMs || 5000);
   }
 });
 
-// Periodic background check inside Service Worker
-function checkBackgroundNotifications() {
-  if (!scheduledNotifs || scheduledNotifs.length === 0) return;
-
-  const now = new Date();
-  const yyyy = now.getFullYear();
-  const mm = String(now.getMonth() + 1).padStart(2, '0');
-  const dd = String(now.getDate()).padStart(2, '0');
-  const hh = String(now.getHours()).padStart(2, '0');
-  const min = String(now.getMinutes()).padStart(2, '0');
-  const currentNowIso = `${yyyy}-${mm}-${dd} ${hh}:${min}`;
-
-  const remaining = [];
-  scheduledNotifs.forEach((n) => {
-    if (n.dataHoraNotificacao && n.dataHoraNotificacao <= currentNowIso) {
-      self.registration.showNotification(`📅 Lembrete Tattoo: ${n.cliente}`, {
-        body: n.mensagem,
-        tag: n.id,
-        icon: '/pwa-192.svg',
-        badge: '/pwa-192.svg',
-        vibrate: [200, 100, 200, 100, 300],
-        data: { url: '/' },
-      });
-    } else {
-      remaining.push(n);
-    }
+function showSWNotification(title, body, tag, data) {
+  self.registration.showNotification(title, {
+    body: body || '',
+    tag: tag || 'tattoo-agenda-' + Date.now(),
+    icon: '/pwa-192.svg',
+    badge: '/pwa-192.svg',
+    vibrate: [200, 100, 200, 100, 300],
+    data: data || { url: '/' },
+    renotify: true,
+    requireInteraction: true,
   });
-
-  scheduledNotifs = remaining;
 }
 
-// Check every 30s in Service Worker
-setInterval(checkBackgroundNotifications, 30000);
+// Active background timers maintained inside Service Worker
+const activeSWTimers = new Map();
+
+function scheduleTimersInServiceWorker() {
+  if (!scheduledNotifs || scheduledNotifs.length === 0) return;
+
+  const nowMs = Date.now();
+
+  scheduledNotifs.forEach((n) => {
+    if (!n.dataHoraNotificacao || activeSWTimers.has(n.id)) return;
+
+    // Parse dataHoraNotificacao "YYYY-MM-DD HH:mm"
+    const [datePart, timePart] = n.dataHoraNotificacao.split(' ');
+    if (!datePart || !timePart) return;
+
+    const [yyyy, mm, dd] = datePart.split('-').map(Number);
+    const [hh, min] = timePart.split(':').map(Number);
+    const targetDate = new Date(yyyy, mm - 1, dd, hh, min, 0);
+    const diffMs = targetDate.getTime() - nowMs;
+
+    // Try native TimestampTrigger if browser supports Native Scheduled Notifications
+    if (typeof TimestampTrigger !== 'undefined' && 'showTrigger' in Notification.prototype && diffMs > 0) {
+      try {
+        self.registration.showNotification(`📅 Lembrete Tattoo: ${n.cliente}`, {
+          body: n.mensagem,
+          tag: n.id,
+          icon: '/pwa-192.svg',
+          badge: '/pwa-192.svg',
+          vibrate: [200, 100, 200, 100, 300],
+          showTrigger: new TimestampTrigger(targetDate.getTime()),
+          data: { url: '/' },
+        });
+        activeSWTimers.set(n.id, true);
+        return;
+      } catch (err) {
+        console.warn('TimestampTrigger failed, fallback to SW timer', err);
+      }
+    }
+
+    // Fallback: If trigger time is in future within next 7 days, schedule SW timer
+    if (diffMs > 0 && diffMs <= 7 * 24 * 60 * 60 * 1000) {
+      const timerId = setTimeout(() => {
+        showSWNotification(`📅 Lembrete Tattoo: ${n.cliente}`, n.mensagem, n.id);
+        activeSWTimers.delete(n.id);
+      }, diffMs);
+      activeSWTimers.set(n.id, timerId);
+    } else if (diffMs <= 0 && diffMs > -60000) {
+      // If due within the last 1 minute
+      showSWNotification(`📅 Lembrete Tattoo: ${n.cliente}`, n.mensagem, n.id);
+      activeSWTimers.set(n.id, true);
+    }
+  });
+}
 

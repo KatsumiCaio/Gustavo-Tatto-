@@ -1,0 +1,60 @@
+{
+  "entities": {
+    "clientes": {
+      "title": "Clientes",
+      "description": "Cadastro de clientes do estúdio de tatuagem",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "nome": { "type": "string" },
+        "telefone": { "type": "string" },
+        "instagram": { "type": "string" },
+        "observacoes": { "type": "string" }
+      },
+      "required": ["nome", "telefone"]
+    },
+    "tatuagens": {
+      "title": "Tatuagens e Sessões",
+      "description": "Agendamentos de sessões de tatuagem e histórico",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "cliente": { "type": "string" },
+        "descricao": { "type": "string" },
+        "data": { "type": "string" },
+        "horario": { "type": "string" },
+        "local": { "type": "string" },
+        "valor": { "type": "number" },
+        "status": { "type": "string" },
+        "telefone": { "type": "string" },
+        "observacoes": { "type": "string" },
+        "imagemModelo": { "type": "string" },
+        "imagemFinal": { "type": "string" },
+        "notificacaoAtivar": { "type": "boolean" },
+        "notificacaoOpcao": { "type": "string" },
+        "notificacaoHorarioPersonalizado": { "type": "string" },
+        "notificacaoDataPersonalizada": { "type": "string" }
+      },
+      "required": ["cliente", "descricao", "data", "horario"]
+    },
+    "notificacoes": {
+      "title": "Notificações",
+      "description": "Lista de lembretes e notificações do sistema",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "tatuagemId": { "type": "string" },
+        "cliente": { "type": "string" },
+        "descricao": { "type": "string" },
+        "dataTatuagem": { "type": "string" },
+        "horarioTatuagem": { "type": "string" },
+        "dataHoraNotificacao": { "type": "string" },
+        "opcaoLembrete": { "type": "string" },
+        "mensagem": { "type": "string" },
+        "lida": { "type": "boolean" },
+        "criadaEm": { "type": "string" }
+      },
+      "required": ["tatuagemId", "cliente", "mensagem"]
+    }
+  }
+}

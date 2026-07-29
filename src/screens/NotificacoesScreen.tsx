@@ -10,6 +10,7 @@ export const NotificacoesScreen: React.FC = () => {
     permissaoNotificacaoState,
     solicitarPermissaoNotificacaoSistema,
     dispararNotificacaoTeste,
+    dispararNotificacaoTesteComDelay,
     marcarNotificacaoLida,
     marcarTodasNotificacoesLidas,
     deleteNotificacao,
@@ -20,11 +21,18 @@ export const NotificacoesScreen: React.FC = () => {
   const [filter, setFilter] = useState<'todas' | 'nao_lidas'>('todas');
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [testSentMsg, setTestSentMsg] = useState(false);
+  const [delayActiveMsg, setDelayActiveMsg] = useState(false);
 
   const handleTestNotification = () => {
-    const ok = dispararNotificacaoTeste();
+    dispararNotificacaoTeste();
     setTestSentMsg(true);
     setTimeout(() => setTestSentMsg(false), 4000);
+  };
+
+  const handleDelayTest = () => {
+    dispararNotificacaoTesteComDelay(5);
+    setDelayActiveMsg(true);
+    setTimeout(() => setDelayActiveMsg(false), 6000);
   };
 
   const filteredNotifs = notificacoes.filter(n => {
@@ -106,7 +114,7 @@ export const NotificacoesScreen: React.FC = () => {
             </div>
           </div>
 
-          <div className="shrink-0 flex items-center gap-2">
+          <div className="shrink-0 flex flex-wrap items-center gap-2">
             {permissaoNotificacaoState !== 'granted' ? (
               <button
                 onClick={solicitarPermissaoNotificacaoSistema}
@@ -116,13 +124,22 @@ export const NotificacoesScreen: React.FC = () => {
                 <span>Ativar no Celular</span>
               </button>
             ) : (
-              <button
-                onClick={handleTestNotification}
-                className="bg-[#1C1C1C] hover:bg-[#25D366] text-[#25D366] hover:text-white border border-[#25D366]/40 text-xs font-bold px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-1.5"
-              >
-                <Send size={14} />
-                <span>Testar Notificação</span>
-              </button>
+              <>
+                <button
+                  onClick={handleTestNotification}
+                  className="bg-[#1C1C1C] hover:bg-[#25D366] text-[#25D366] hover:text-white border border-[#25D366]/40 text-xs font-bold px-3 py-2 rounded-xl transition-all flex items-center gap-1.5"
+                >
+                  <Send size={13} />
+                  <span>Testar Agora</span>
+                </button>
+                <button
+                  onClick={handleDelayTest}
+                  className="bg-[#FF6B35] hover:bg-[#E63946] text-white text-xs font-bold px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 shadow-md shadow-[#FF6B35]/20"
+                >
+                  <Smartphone size={13} />
+                  <span>Testar em 5s (Feche/Minimize)</span>
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -131,6 +148,13 @@ export const NotificacoesScreen: React.FC = () => {
           <div className="text-xs font-bold text-[#25D366] bg-[#25D366]/10 border border-[#25D366]/30 p-2.5 rounded-xl flex items-center gap-2 animate-fade-in">
             <CheckCircle2 size={16} />
             <span>Notificação enviada! Verifique a barra de notificações do seu aparelho/navegador.</span>
+          </div>
+        )}
+
+        {delayActiveMsg && (
+          <div className="text-xs font-bold text-[#FF6B35] bg-[#FF6B35]/10 border border-[#FF6B35]/30 p-2.5 rounded-xl flex items-center gap-2 animate-pulse">
+            <Smartphone size={16} />
+            <span>⏳ Notificação agendada para daqui a 5 segundos! Minimize ou feche o aplicativo agora para testar.</span>
           </div>
         )}
       </div>

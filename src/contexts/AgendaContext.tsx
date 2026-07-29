@@ -74,6 +74,7 @@ interface AgendaContextType {
   permissaoNotificacaoState: 'granted' | 'denied' | 'default';
   solicitarPermissaoNotificacaoSistema: () => Promise<boolean>;
   dispararNotificacaoTeste: () => boolean;
+  dispararNotificacaoTesteComDelay: (delaySegundos?: number) => boolean;
   navigate: (screen: ScreenName, params?: NavigationParams) => void;
   goBack: () => void;
   addTatuagem: (tatuagem: Omit<Tatuagem, 'id'>) => void;
@@ -108,6 +109,12 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const firedNotifIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
+    StorageService.subscribeSync({
+      onTatuagens: (tats) => setTatuagens(tats),
+      onClientes: (clis) => setClientes(clis),
+      onNotificacoes: (notifs) => setNotificacoes(notifs),
+    });
+
     const initAndLoad = async () => {
       await StorageService.initStorage();
       loadAllData();
@@ -168,10 +175,18 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   const dispararNotificacaoTeste = (): boolean => {
     return SystemNotificationService.sendNotification({
-      title: '⚡ Teste de Notificação no Celular',
-      body: 'As notificações do sistema Gustavo Tattoo estão funcionando perfeitamente no seu dispositivo!',
+      title: '⚡ Teste de Notificação Instantânea',
+      body: 'As notificações do sistema Gustavo Tattoo estão ativadas no seu dispositivo!',
       tag: 'test-notif-' + Date.now(),
     });
+  };
+
+  const dispararNotificacaoTesteComDelay = (delaySegundos: number = 5): boolean => {
+    return SystemNotificationService.scheduleDelayedNotification({
+      title: '🔔 Teste com App Fechado / Minimizado',
+      body: 'As notificações do aplicativo Gustavo Tattoo funcionam em segundo plano no seu celular!',
+      tag: 'test-delayed-notif-' + Date.now(),
+    }, delaySegundos * 1000);
   };
 
   const loadAllData = () => {
@@ -412,6 +427,7 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         permissaoNotificacaoState,
         solicitarPermissaoNotificacaoSistema,
         dispararNotificacaoTeste,
+        dispararNotificacaoTesteComDelay,
         navigate,
         goBack,
         addTatuagem,

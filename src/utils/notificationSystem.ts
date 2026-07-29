@@ -104,6 +104,37 @@ export const SystemNotificationService = {
     }
   },
 
+  // Trigger delayed notification via Service Worker (Works even if tab/app is closed right after!)
+  scheduleDelayedNotification(options: DeviceNotificationOptions, delayMs: number = 5000): boolean {
+    this.playAlertEffects();
+
+    if (!this.isSupported() || Notification.permission !== 'granted') {
+      return false;
+    }
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(reg => {
+        if (reg.active) {
+          reg.active.postMessage({
+            type: 'SCHEDULE_DELAYED',
+            payload: {
+              ...options,
+              delayMs,
+            },
+          });
+        } else {
+          setTimeout(() => this.sendNotification(options), delayMs);
+        }
+      }).catch(() => {
+        setTimeout(() => this.sendNotification(options), delayMs);
+      });
+      return true;
+    } else {
+      setTimeout(() => this.sendNotification(options), delayMs);
+      return true;
+    }
+  },
+
   // Sync scheduled notifications with Service Worker background worker
   syncScheduledWithServiceWorker(notificacoes: any[]) {
     if ('serviceWorker' in navigator) {
