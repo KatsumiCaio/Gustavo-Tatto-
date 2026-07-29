@@ -13,21 +13,18 @@ const sampleClientes: Cliente[] = [
     id: 'c1',
     nome: 'Carlos Eduardo Santos',
     telefone: '(11) 98765-4321',
-    email: 'carlos.edu@gmail.com',
     instagram: '@carlostattoo',
   },
   {
     id: 'c2',
     nome: 'Mariana Oliveira',
     telefone: '(11) 97123-8899',
-    email: 'mari.oliveira@outlook.com',
     instagram: '@mari_oli',
   },
   {
     id: 'c3',
     nome: 'Lucas Gabriel Costa',
     telefone: '(11) 99887-1122',
-    email: 'lucas.costa@tech.com',
     instagram: '@lucascosta_fit',
   },
 ];

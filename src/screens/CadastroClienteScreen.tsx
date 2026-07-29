@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { useAgenda } from '../contexts/AgendaContext';
-import { User, Phone, Mail, Instagram, CheckCircle2, AlertCircle } from 'lucide-react';
+import { User, Phone, Instagram, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export const CadastroClienteScreen: React.FC = () => {
-  const { addCliente, clientes, navigate } = useAgenda();
+  const { addCliente, clientes } = useAgenda();
 
   const [nome, setNome] = useState('');
   const [telefone, setTelefone] = useState('');
-  const [email, setEmail] = useState('');
   const [instagram, setInstagram] = useState('');
 
   const [successMsg, setSuccessMsg] = useState('');
@@ -45,14 +44,12 @@ export const CadastroClienteScreen: React.FC = () => {
     addCliente({
       nome: nome.trim(),
       telefone: telefone.trim(),
-      email: email.trim() || undefined,
       instagram: instagram.trim() || undefined,
     });
 
     setSuccessMsg('Cliente cadastrado com sucesso!');
     setNome('');
     setTelefone('');
-    setEmail('');
     setInstagram('');
 
     setTimeout(() => {
@@ -119,23 +116,6 @@ export const CadastroClienteScreen: React.FC = () => {
                 maxLength={15}
                 className="w-full bg-[#1C1C1C] border border-[#3A3A3A] focus:border-[#FF6B35] rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#F5F5F5] focus:outline-none"
                 required
-              />
-            </div>
-          </div>
-
-          {/* Email */}
-          <div>
-            <label className="block text-xs font-semibold text-[#999999] mb-1.5">
-              E-mail
-            </label>
-            <div className="relative">
-              <Mail size={18} className="absolute left-3.5 top-3 text-[#999999]" />
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="cliente@email.com"
-                className="w-full bg-[#1C1C1C] border border-[#3A3A3A] focus:border-[#FF6B35] rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#F5F5F5] focus:outline-none"
               />
             </div>
           </div>
