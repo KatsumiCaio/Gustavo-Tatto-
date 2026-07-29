@@ -1,10 +1,73 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Tatuagem, Cliente, ScreenName, NavigationParams } from '../types';
+import { Tatuagem, Cliente, Notificacao, ScreenName, NavigationParams } from '../types';
 import { StorageService } from '../services/storage';
+
+export function calcularDataHoraNotificacao(
+  data: string,
+  horario: string,
+  opcao: string = 'mesmo_horario',
+  dataCustom?: string,
+  horarioCustom?: string
+): { dataHoraIso: string; labelHorario: string } {
+  if (opcao === 'personalizado' && dataCustom && horarioCustom) {
+    const formattedDate = dataCustom.split('-').reverse().join('/');
+    return {
+      dataHoraIso: `${dataCustom} ${horarioCustom}`,
+      labelHorario: `${formattedDate} às ${horarioCustom}h`,
+    };
+  }
+
+  const [year, month, day] = (data || '').split('-').map(Number);
+  const [hours, minutes] = (horario || '12:00').split(':').map(Number);
+  const jobDate = new Date(year || 2026, (month || 1) - 1, day || 1, hours || 0, minutes || 0);
+
+  let notifyDate = new Date(jobDate.getTime());
+  let label = '';
+
+  switch (opcao) {
+    case '15min':
+      notifyDate.setMinutes(notifyDate.getMinutes() - 15);
+      label = '15 min antes';
+      break;
+    case '30min':
+      notifyDate.setMinutes(notifyDate.getMinutes() - 30);
+      label = '30 min antes';
+      break;
+    case '1hora':
+      notifyDate.setHours(notifyDate.getHours() - 1);
+      label = '1 hora antes';
+      break;
+    case '2horas':
+      notifyDate.setHours(notifyDate.getHours() - 2);
+      label = '2 horas antes';
+      break;
+    case '1dia':
+      notifyDate.setDate(notifyDate.getDate() - 1);
+      label = '1 dia antes';
+      break;
+    case 'mesmo_horario':
+    default:
+      label = 'No horário da sessão';
+      break;
+  }
+
+  const yyyy = notifyDate.getFullYear();
+  const mm = String(notifyDate.getMonth() + 1).padStart(2, '0');
+  const dd = String(notifyDate.getDate()).padStart(2, '0');
+  const hh = String(notifyDate.getHours()).padStart(2, '0');
+  const min = String(notifyDate.getMinutes()).padStart(2, '0');
+
+  return {
+    dataHoraIso: `${yyyy}-${mm}-${dd} ${hh}:${min}`,
+    labelHorario: `${label} (${dd}/${mm} às ${hh}:${min}h)`,
+  };
+}
 
 interface AgendaContextType {
   tatuagens: Tatuagem[];
   clientes: Cliente[];
+  notificacoes: Notificacao[];
+  unreadNotificacoesCount: number;
   currentScreen: ScreenName;
   navParams: NavigationParams;
   navigate: (screen: ScreenName, params?: NavigationParams) => void;
@@ -15,6 +78,9 @@ interface AgendaContextType {
   addCliente: (cliente: Omit<Cliente, 'id'>) => void;
   updateCliente: (id: string, updates: Partial<Cliente>) => void;
   deleteCliente: (id: string) => void;
+  marcarNotificacaoLida: (id: string) => void;
+  marcarTodasNotificacoesLidas: () => void;
+  deleteNotificacao: (id: string) => void;
   clearAllData: () => void;
   reloadData: () => void;
   getTatuagensForDate: (date: Date) => Tatuagem[];
@@ -27,6 +93,7 @@ const AgendaContext = createContext<AgendaContextType | undefined>(undefined);
 export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [tatuagens, setTatuagens] = useState<Tatuagem[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [notificacoes, setNotificacoes] = useState<Notificacao[]>([]);
   const [currentScreen, setCurrentScreen] = useState<ScreenName>('main');
   const [navParams, setNavParams] = useState<NavigationParams>({});
   const [history, setHistory] = useState<{ screen: ScreenName; params: NavigationParams }[]>([]);
@@ -42,8 +109,45 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const loadAllData = () => {
     const loadedTats = StorageService.getTatuagens();
     const loadedClis = StorageService.getClientes();
+    const loadedNotifs = StorageService.getNotificacoes();
     setTatuagens(loadedTats);
     setClientes(loadedClis);
+    setNotificacoes(loadedNotifs);
+  };
+
+  const syncNotificationForTatuagem = (tatuagem: Tatuagem, currentNotifs: Notificacao[]): Notificacao[] => {
+    // Remove existing notification for this tattoo
+    const filtered = currentNotifs.filter(n => n.tatuagemId !== tatuagem.id);
+
+    if (!tatuagem.notificacaoAtivar) {
+      return filtered;
+    }
+
+    const { dataHoraIso, labelHorario } = calcularDataHoraNotificacao(
+      tatuagem.data,
+      tatuagem.horario,
+      tatuagem.notificacaoOpcao || 'mesmo_horario',
+      tatuagem.notificacaoDataPersonalizada,
+      tatuagem.notificacaoHorarioPersonalizado
+    );
+
+    const formattedTattooDate = (tatuagem.data || '').split('-').reverse().join('/');
+
+    const newNotif: Notificacao = {
+      id: 'notif_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      tatuagemId: tatuagem.id,
+      cliente: tatuagem.cliente,
+      descricao: tatuagem.descricao,
+      dataTatuagem: tatuagem.data,
+      horarioTatuagem: tatuagem.horario,
+      dataHoraNotificacao: dataHoraIso,
+      opcaoLembrete: labelHorario,
+      mensagem: `Lembrete de agendamento: ${tatuagem.cliente} (${tatuagem.descricao}) marcado para ${formattedTattooDate} às ${tatuagem.horario}h.`,
+      lida: false,
+      criadaEm: new Date().toISOString(),
+    };
+
+    return [newNotif, ...filtered];
   };
 
   const navigate = (screen: ScreenName, params: NavigationParams = {}) => {
@@ -70,21 +174,37 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       ...tatuagemData,
       id: 'tat_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
     };
-    const updated = [newTatuagem, ...tatuagens];
-    setTatuagens(updated);
-    StorageService.saveTatuagens(updated);
+    const updatedTats = [newTatuagem, ...tatuagens];
+    setTatuagens(updatedTats);
+    StorageService.saveTatuagens(updatedTats);
+
+    // Sync notification
+    const updatedNotifs = syncNotificationForTatuagem(newTatuagem, notificacoes);
+    setNotificacoes(updatedNotifs);
+    StorageService.saveNotificacoes(updatedNotifs);
   };
 
   const updateTatuagem = (id: string, updates: Partial<Tatuagem>) => {
-    const updated = tatuagens.map(t => (t.id === id ? { ...t, ...updates } : t));
-    setTatuagens(updated);
-    StorageService.saveTatuagens(updated);
+    const updatedTats = tatuagens.map(t => (t.id === id ? { ...t, ...updates } : t));
+    setTatuagens(updatedTats);
+    StorageService.saveTatuagens(updatedTats);
+
+    const targetTat = updatedTats.find(t => t.id === id);
+    if (targetTat) {
+      const updatedNotifs = syncNotificationForTatuagem(targetTat, notificacoes);
+      setNotificacoes(updatedNotifs);
+      StorageService.saveNotificacoes(updatedNotifs);
+    }
   };
 
   const deleteTatuagem = (id: string) => {
-    const updated = tatuagens.filter(t => t.id !== id);
-    setTatuagens(updated);
-    StorageService.saveTatuagens(updated);
+    const updatedTats = tatuagens.filter(t => t.id !== id);
+    setTatuagens(updatedTats);
+    StorageService.saveTatuagens(updatedTats);
+
+    const updatedNotifs = notificacoes.filter(n => n.tatuagemId !== id);
+    setNotificacoes(updatedNotifs);
+    StorageService.saveNotificacoes(updatedNotifs);
   };
 
   const addCliente = (clienteData: Omit<Cliente, 'id'>) => {
@@ -103,7 +223,7 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setClientes(updatedClientes);
     StorageService.saveClientes(updatedClientes);
 
-    // If client name or phone changed, update associated tattoos
+    // If client name or phone changed, update associated tattoos & notificacoes
     if (oldClient && (updates.nome || updates.telefone)) {
       const oldNameLower = oldClient.nome.toLowerCase();
       const newName = updates.nome || oldClient.nome;
@@ -121,6 +241,18 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       });
       setTatuagens(updatedTats);
       StorageService.saveTatuagens(updatedTats);
+
+      const updatedNotifs = notificacoes.map(n => {
+        if (n.cliente.toLowerCase() === oldNameLower) {
+          return {
+            ...n,
+            cliente: newName,
+          };
+        }
+        return n;
+      });
+      setNotificacoes(updatedNotifs);
+      StorageService.saveNotificacoes(updatedNotifs);
     }
   };
 
@@ -130,15 +262,36 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     StorageService.saveClientes(updated);
   };
 
+  const marcarNotificacaoLida = (id: string) => {
+    const updated = notificacoes.map(n => (n.id === id ? { ...n, lida: true } : n));
+    setNotificacoes(updated);
+    StorageService.saveNotificacoes(updated);
+  };
+
+  const marcarTodasNotificacoesLidas = () => {
+    const updated = notificacoes.map(n => ({ ...n, lida: true }));
+    setNotificacoes(updated);
+    StorageService.saveNotificacoes(updated);
+  };
+
+  const deleteNotificacao = (id: string) => {
+    const updated = notificacoes.filter(n => n.id !== id);
+    setNotificacoes(updated);
+    StorageService.saveNotificacoes(updated);
+  };
+
   const clearAllData = () => {
     StorageService.clearAll();
     setTatuagens([]);
     setClientes([]);
+    setNotificacoes([]);
   };
 
   const reloadData = () => {
     loadAllData();
   };
+
+  const unreadNotificacoesCount = notificacoes.filter(n => !n.lida).length;
 
   const getTatuagensForDate = (date: Date) => {
     if (!date || isNaN(date.getTime())) return [];
@@ -184,6 +337,8 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       value={{
         tatuagens,
         clientes,
+        notificacoes,
+        unreadNotificacoesCount,
         currentScreen,
         navParams,
         navigate,
@@ -194,6 +349,9 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         addCliente,
         updateCliente,
         deleteCliente,
+        marcarNotificacaoLida,
+        marcarTodasNotificacoesLidas,
+        deleteNotificacao,
         clearAllData,
         reloadData,
         getTatuagensForDate,

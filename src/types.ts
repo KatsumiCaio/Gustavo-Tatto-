@@ -6,6 +6,20 @@ export interface Cliente {
   observacoes?: string;
 }
 
+export interface Notificacao {
+  id: string;
+  tatuagemId: string;
+  cliente: string;
+  descricao: string;
+  dataTatuagem: string; // yyyy-MM-dd
+  horarioTatuagem: string; // HH:mm
+  dataHoraNotificacao: string; // YYYY-MM-DD HH:mm for sorting and status
+  opcaoLembrete: string; // 'mesmo_horario' | '15min' | '30min' | '1hora' | '2horas' | '1dia' | 'personalizado'
+  mensagem: string;
+  lida: boolean;
+  criadaEm: string;
+}
+
 export interface Tatuagem {
   id: string;
   cliente: string;
@@ -19,6 +33,12 @@ export interface Tatuagem {
   observacoes?: string;
   imagemModelo?: string; // base64 or URL
   imagemFinal?: string;  // base64 or URL
+
+  // Notification fields
+  notificacaoAtivar?: boolean;
+  notificacaoOpcao?: 'mesmo_horario' | '15min' | '30min' | '1hora' | '2horas' | '1dia' | 'personalizado';
+  notificacaoHorarioPersonalizado?: string; // HH:mm
+  notificacaoDataPersonalizada?: string; // yyyy-MM-dd
 }
 
 export type ViewMode = 'dia' | 'semana' | 'mes';
@@ -30,7 +50,8 @@ export type ScreenName =
   | 'cadastro_cliente'
   | 'lista_clientes'
   | 'historico_trabalhos'
-  | 'settings';
+  | 'settings'
+  | 'notificacoes';
 
 export interface NavigationParams {
   tatuagemId?: string;

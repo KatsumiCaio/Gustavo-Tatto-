@@ -1,16 +1,17 @@
 import React from 'react';
 import { useAgenda } from '../contexts/AgendaContext';
 import { ScreenName } from '../types';
-import { Home, Calendar, PlusCircle, Users } from 'lucide-react';
+import { Home, Calendar, PlusCircle, Users, Bell } from 'lucide-react';
 
 export const BottomNav: React.FC = () => {
-  const { currentScreen, navigate } = useAgenda();
+  const { currentScreen, unreadNotificacoesCount, navigate } = useAgenda();
 
-  const navItems: { screen: ScreenName; label: string; icon: React.ReactNode }[] = [
-    { screen: 'main', label: 'Início', icon: <Home size={20} /> },
-    { screen: 'agenda', label: 'Agenda', icon: <Calendar size={20} /> },
-    { screen: 'add_tatuagem', label: 'Novo', icon: <PlusCircle size={20} /> },
-    { screen: 'lista_clientes', label: 'Clientes', icon: <Users size={20} /> },
+  const navItems: { screen: ScreenName; label: string; icon: React.ReactNode; badge?: number }[] = [
+    { screen: 'main', label: 'Início', icon: <Home size={19} /> },
+    { screen: 'agenda', label: 'Agenda', icon: <Calendar size={19} /> },
+    { screen: 'add_tatuagem', label: 'Novo', icon: <PlusCircle size={19} /> },
+    { screen: 'lista_clientes', label: 'Clientes', icon: <Users size={19} /> },
+    { screen: 'notificacoes', label: 'Alertas', icon: <Bell size={19} />, badge: unreadNotificacoesCount },
   ];
 
   return (
@@ -22,18 +23,23 @@ export const BottomNav: React.FC = () => {
             <button
               key={item.screen}
               onClick={() => navigate(item.screen)}
-              className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all duration-150 active:scale-95 min-w-[52px] ${
+              className={`flex flex-col items-center justify-center py-1 px-1.5 rounded-xl transition-all duration-150 active:scale-95 min-w-[48px] relative ${
                 isActive
                   ? 'text-[#FF6B35] font-bold'
                   : 'text-[#888888] hover:text-[#CCCCCC]'
               }`}
             >
               <div
-                className={`p-1 rounded-xl transition-colors ${
+                className={`p-1 rounded-xl transition-colors relative ${
                   isActive ? 'bg-[#FF6B35]/15' : ''
                 }`}
               >
                 {item.icon}
+                {!!item.badge && item.badge > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-[#E63946] text-white text-[9px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center">
+                    {item.badge > 9 ? '9+' : item.badge}
+                  </span>
+                )}
               </div>
               <span className="text-[10px] tracking-tight mt-0.5 leading-none">
                 {item.label}

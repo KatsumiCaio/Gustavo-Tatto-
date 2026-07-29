@@ -1,7 +1,8 @@
-import { Tatuagem, Cliente } from '../types';
+import { Tatuagem, Cliente, Notificacao } from '../types';
 
 const TATUAGENS_KEY = 'tatuagens_data';
 const CLIENTES_KEY = 'clientes_data';
+const NOTIFICACOES_KEY = 'notificacoes_data';
 const INITIALIZED_KEY = 'app_initialized_v2';
 
 const DB_NAME = 'GustavoTattooDB';
@@ -136,7 +137,7 @@ export const StorageService = {
       }
 
       // If already initialized, restore from IndexedDB if LocalStorage was lost
-      const keys = [CLIENTES_KEY, TATUAGENS_KEY];
+      const keys = [CLIENTES_KEY, TATUAGENS_KEY, NOTIFICACOES_KEY];
       for (const k of keys) {
         const lsData = localStorage.getItem(k);
         if (lsData === null) {
@@ -203,9 +204,34 @@ export const StorageService = {
     saveIDB(INITIALIZED_KEY, 'true');
   },
 
+  getNotificacoes(): Notificacao[] {
+    try {
+      const data = localStorage.getItem(NOTIFICACOES_KEY);
+      if (data === null || data === undefined) {
+        return [];
+      }
+      return JSON.parse(data);
+    } catch (e) {
+      console.error('Error reading notificacoes:', e);
+      return [];
+    }
+  },
+
+  saveNotificacoes(notificacoes: Notificacao[]): void {
+    try {
+      localStorage.setItem(NOTIFICACOES_KEY, JSON.stringify(notificacoes));
+      localStorage.setItem(INITIALIZED_KEY, 'true');
+    } catch (e) {
+      console.error('Error saving notificacoes to localStorage:', e);
+    }
+    saveIDB(NOTIFICACOES_KEY, notificacoes);
+    saveIDB(INITIALIZED_KEY, 'true');
+  },
+
   clearAll(): void {
     this.saveClientes([]);
     this.saveTatuagens([]);
+    this.saveNotificacoes([]);
     try {
       localStorage.setItem(INITIALIZED_KEY, 'true');
     } catch (e) {

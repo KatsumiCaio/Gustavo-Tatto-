@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAgenda } from '../contexts/AgendaContext';
 import { ScreenName } from '../types';
-import { ArrowLeft, Settings, Smartphone } from 'lucide-react';
+import { ArrowLeft, Settings, Smartphone, Bell } from 'lucide-react';
 import { InstallAppModal } from './InstallAppModal';
 
 interface HeaderProps {
@@ -17,10 +17,11 @@ const titlesMap: Record<ScreenName, string> = {
   lista_clientes: 'Histórico por Cliente',
   historico_trabalhos: 'Histórico de Trabalhos',
   settings: 'Configurações & Resumo',
+  notificacoes: 'Aba de Notificações',
 };
 
 export const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
-  const { currentScreen, navigate, goBack } = useAgenda();
+  const { currentScreen, unreadNotificacoesCount, navigate, goBack } = useAgenda();
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
 
   const displayTitle = title || titlesMap[currentScreen] || 'Gustavo Tattoo';
@@ -66,6 +67,24 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
 
           {/* Quick actions */}
           <div className="flex items-center gap-2">
+            {/* Bell Notifications Button */}
+            <button
+              onClick={() => navigate('notificacoes')}
+              className={`p-2.5 rounded-lg border transition-all relative ${
+                currentScreen === 'notificacoes'
+                  ? 'bg-[#FF6B35] text-white border-[#FF6B35]'
+                  : 'bg-[#2A2A2A] text-[#999999] border-transparent hover:text-[#FF6B35] hover:bg-[#3A3A3A]'
+              }`}
+              title="Aba de Notificações"
+            >
+              <Bell size={20} />
+              {unreadNotificacoesCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-[#E63946] text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center animate-bounce shadow-md">
+                  {unreadNotificacoesCount > 9 ? '9+' : unreadNotificacoesCount}
+                </span>
+              )}
+            </button>
+
             <button
               onClick={() => setIsInstallModalOpen(true)}
               className="px-3 py-1.5 rounded-xl bg-[#FF6B35]/15 text-[#FF6B35] border border-[#FF6B35]/30 hover:bg-[#FF6B35] hover:text-white transition-all text-xs font-bold flex items-center gap-1.5 shadow-sm"

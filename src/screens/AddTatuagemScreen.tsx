@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAgenda } from '../contexts/AgendaContext';
 import { Cliente } from '../types';
 import { compressImage } from '../utils/imageCompressor';
-import { User, UserPlus, Pencil, MapPin, DollarSign, Calendar, Clock, MessageSquare, Camera, X, CheckCircle2, Sparkles, Search, Instagram, Phone } from 'lucide-react';
+import { User, UserPlus, Pencil, MapPin, DollarSign, Calendar, Clock, MessageSquare, Camera, X, CheckCircle2, Sparkles, Search, Instagram, Phone, Bell } from 'lucide-react';
 
 export const AddTatuagemScreen: React.FC = () => {
   const { clientes, addTatuagem, updateTatuagem, tatuagens, navParams, navigate } = useAgenda();
@@ -22,6 +22,12 @@ export const AddTatuagemScreen: React.FC = () => {
   const [observacoes, setObservacoes] = useState('');
   const [imagemModelo, setImagemModelo] = useState<string | null>(null);
 
+  // Notification state
+  const [notificacaoAtivar, setNotificacaoAtivar] = useState(true);
+  const [notificacaoOpcao, setNotificacaoOpcao] = useState<'mesmo_horario' | '15min' | '30min' | '1hora' | '2horas' | '1dia' | 'personalizado'>('1hora');
+  const [notificacaoDataPersonalizada, setNotificacaoDataPersonalizada] = useState(() => new Date().toISOString().split('T')[0]);
+  const [notificacaoHorarioPersonalizado, setNotificacaoHorarioPersonalizado] = useState('09:00');
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [successMsg, setSuccessMsg] = useState(false);
 
@@ -38,6 +44,11 @@ export const AddTatuagemScreen: React.FC = () => {
         setValor(existing.valor ? String(existing.valor) : '');
         setObservacoes(existing.observacoes || '');
         setImagemModelo(existing.imagemModelo || null);
+
+        setNotificacaoAtivar(existing.notificacaoAtivar !== false);
+        setNotificacaoOpcao(existing.notificacaoOpcao || '1hora');
+        setNotificacaoDataPersonalizada(existing.notificacaoDataPersonalizada || existing.data || new Date().toISOString().split('T')[0]);
+        setNotificacaoHorarioPersonalizado(existing.notificacaoHorarioPersonalizado || existing.horario || '09:00');
       }
     }
   }, [isEditing, editingId, tatuagens, clientes]);
@@ -80,6 +91,11 @@ export const AddTatuagemScreen: React.FC = () => {
       telefone: selectedCliente!.telefone || undefined,
       observacoes: observacoes.trim() || undefined,
       imagemModelo: imagemModelo || undefined,
+
+      notificacaoAtivar,
+      notificacaoOpcao,
+      notificacaoDataPersonalizada: notificacaoOpcao === 'personalizado' ? notificacaoDataPersonalizada : undefined,
+      notificacaoHorarioPersonalizado: notificacaoOpcao === 'personalizado' ? notificacaoHorarioPersonalizado : undefined,
     };
 
     if (isEditing && editingId) {
@@ -304,6 +320,82 @@ export const AddTatuagemScreen: React.FC = () => {
                 />
               </div>
             </div>
+          </div>
+
+          {/* Notificação & Lembrete */}
+          <div className="space-y-4 border-t border-[#3A3A3A] pt-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-[#FF6B35] uppercase tracking-wider flex items-center gap-1.5">
+                <Bell size={14} /> Notificação & Lembrete
+              </h3>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={notificacaoAtivar}
+                  onChange={e => setNotificacaoAtivar(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-[#1C1C1C] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FF6B35]"></div>
+                <span className="ml-2.5 text-xs font-bold text-[#F5F5F5]">
+                  {notificacaoAtivar ? 'Ativada' : 'Desativada'}
+                </span>
+              </label>
+            </div>
+
+            {notificacaoAtivar && (
+              <div className="bg-[#1C1C1C] border border-[#3A3A3A] p-4 rounded-2xl space-y-3.5 animate-fade-in">
+                <div>
+                  <label className="block text-xs font-semibold text-[#999999] mb-1.5">
+                    Quando deseja receber a notificação de lembrete?
+                  </label>
+                  <select
+                    value={notificacaoOpcao}
+                    onChange={e => setNotificacaoOpcao(e.target.value as any)}
+                    className="w-full bg-[#2D2D2D] border border-[#3A3A3A] focus:border-[#FF6B35] rounded-xl px-3.5 py-2.5 text-sm text-[#F5F5F5] focus:outline-none font-medium cursor-pointer"
+                  >
+                    <option value="mesmo_horario">⚡ No mesmo horário da sessão ({horario}h)</option>
+                    <option value="15min">⏱️ 15 minutos antes da sessão</option>
+                    <option value="30min">⏱️ 30 minutos antes da sessão</option>
+                    <option value="1hora">⏰ 1 hora antes da sessão (Recomendado)</option>
+                    <option value="2horas">⏰ 2 horas antes da sessão</option>
+                    <option value="1dia">📅 1 dia antes (no dia anterior)</option>
+                    <option value="personalizado">✏️ Data e Horário personalizados...</option>
+                  </select>
+                </div>
+
+                {notificacaoOpcao === 'personalizado' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-[#3A3A3A]/60">
+                    <div>
+                      <label className="block text-xs font-semibold text-[#999999] mb-1">
+                        Data da Notificação
+                      </label>
+                      <input
+                        type="date"
+                        value={notificacaoDataPersonalizada}
+                        onChange={e => setNotificacaoDataPersonalizada(e.target.value)}
+                        className="w-full bg-[#2D2D2D] border border-[#3A3A3A] focus:border-[#FF6B35] rounded-xl px-3 py-2 text-xs text-[#F5F5F5] focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[#999999] mb-1">
+                        Horário da Notificação
+                      </label>
+                      <input
+                        type="time"
+                        value={notificacaoHorarioPersonalizado}
+                        onChange={e => setNotificacaoHorarioPersonalizado(e.target.value)}
+                        className="w-full bg-[#2D2D2D] border border-[#3A3A3A] focus:border-[#FF6B35] rounded-xl px-3 py-2 text-xs text-[#F5F5F5] focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-[11px] text-[#FFB703] flex items-center gap-1 font-medium pt-1">
+                  <Clock size={12} />
+                  O lembrete será gerado automaticamente na Aba de Notificações.
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="pt-2">

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useAgenda } from '../contexts/AgendaContext';
-import { Calendar, UserPlus, PlusCircle, History, DollarSign, Users, Clock, Sparkles, Smartphone, Apple } from 'lucide-react';
+import { Calendar, UserPlus, PlusCircle, History, DollarSign, Users, Clock, Sparkles, Smartphone, Apple, Bell } from 'lucide-react';
 import { InstallAppModal } from '../components/InstallAppModal';
 
 export const MainScreen: React.FC = () => {
-  const { navigate, tatuagens, clientes } = useAgenda();
+  const { navigate, tatuagens, clientes, unreadNotificacoesCount } = useAgenda();
   const [isInstallOpen, setIsInstallOpen] = useState(false);
 
   const todayStr = new Date().toISOString().split('T')[0];
@@ -30,10 +30,19 @@ export const MainScreen: React.FC = () => {
     {
       id: 'add_tatuagem',
       title: 'Agendar Trabalho',
-      desc: 'Cadastrar nova sessão de tatuagem',
+      desc: 'Cadastrar nova sessão com lembrete',
       screen: 'add_tatuagem' as const,
       icon: PlusCircle,
       color: 'from-[#FFB703] to-[#FF6B35]',
+    },
+    {
+      id: 'notificacoes',
+      title: 'Aba Notificações',
+      desc: 'Lembretes e avisos de tatuagens',
+      screen: 'notificacoes' as const,
+      icon: Bell,
+      color: 'from-[#FF6B35] to-[#FFB703]',
+      badge: unreadNotificacoesCount > 0 ? `${unreadNotificacoesCount} novas` : undefined,
     },
     {
       id: 'cadastro_cliente',
