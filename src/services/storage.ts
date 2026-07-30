@@ -11,70 +11,9 @@ const DB_NAME = 'GustavoTattooDB';
 const DB_VERSION = 1;
 const STORE_NAME = 'app_store';
 
-const sampleClientes: Cliente[] = [
-  {
-    id: 'c1',
-    nome: 'Carlos Eduardo Santos',
-    telefone: '(11) 98765-4321',
-    instagram: '@carlostattoo',
-  },
-  {
-    id: 'c2',
-    nome: 'Mariana Oliveira',
-    telefone: '(11) 97123-8899',
-    instagram: '@mari_oli',
-  },
-  {
-    id: 'c3',
-    nome: 'Lucas Gabriel Costa',
-    telefone: '(11) 99887-1122',
-    instagram: '@lucascosta_fit',
-  },
-];
+const sampleClientes: Cliente[] = [];
 
-const today = new Date().toISOString().split('T')[0];
-
-const sampleTatuagens: Tatuagem[] = [
-  {
-    id: 't1',
-    cliente: 'Carlos Eduardo Santos',
-    descricao: 'Leão em Blackwork no antebraço com hachuras e sombras intensas',
-    data: today,
-    horario: '14:00',
-    horarioTermino: '17:00',
-    local: 'Antebraço direito',
-    valor: 850,
-    status: 'agendado',
-    telefone: '(11) 98765-4321',
-    observacoes: 'Cliente prefere agulha 3RL para detalhes finos.',
-  },
-  {
-    id: 't2',
-    cliente: 'Mariana Oliveira',
-    descricao: 'Ramos de Peônias em Fine Line com toques de pontilhismo suave',
-    data: today,
-    horario: '17:30',
-    horarioTermino: '19:30',
-    local: 'Costela esquerda',
-    valor: 600,
-    status: 'agendado',
-    telefone: '(11) 97123-8899',
-    observacoes: 'Sessão única, pele sensível.',
-  },
-  {
-    id: 't3',
-    cliente: 'Lucas Gabriel Costa',
-    descricao: 'Fechamento de costas - Dragão Oriental Neotradicional',
-    data: '2026-07-20',
-    horario: '10:00',
-    horarioTermino: '16:00',
-    local: 'Costas completas',
-    valor: 1500,
-    status: 'concluído',
-    telefone: '(11) 99887-1122',
-    observacoes: 'Sessão 1 de 3 finalizada com sucesso.',
-  },
-];
+const sampleTatuagens: Tatuagem[] = [];
 
 // Helper to interact with IndexedDB as local fallback
 function openIDB(): Promise<IDBDatabase | null> {
@@ -189,19 +128,43 @@ export const StorageService = {
         }
       });
 
-      // Check if Firestore has existing data or needs initial seed
-      const clientesSnap = await getDocs(collection(db, 'clientes'));
-      if (clientesSnap.empty) {
-        // Seed Firestore with initial sample data
+      // Clean up any remaining sample items from Firestore and local cache
+      const sampleIds = ['c1', 'c2', 'c3', 't1', 't2', 't3'];
+      try {
         const batch = writeBatch(db);
-        sampleClientes.forEach((c) => {
-          batch.set(doc(db, 'clientes', c.id), sanitizeForFirestore(c));
+        let needsCommit = false;
+        
+        const clientesSnap = await getDocs(collection(db, 'clientes'));
+        clientesSnap.forEach((docSnap) => {
+          if (sampleIds.includes(docSnap.id)) {
+            batch.delete(docSnap.ref);
+            needsCommit = true;
+          }
         });
-        sampleTatuagens.forEach((t) => {
-          batch.set(doc(db, 'tatuagens', t.id), sanitizeForFirestore(t));
+
+        const tatuagensSnap = await getDocs(collection(db, 'tatuagens'));
+        tatuagensSnap.forEach((docSnap) => {
+          if (sampleIds.includes(docSnap.id)) {
+            batch.delete(docSnap.ref);
+            needsCommit = true;
+          }
         });
-        await batch.commit();
+
+        if (needsCommit) {
+          await batch.commit();
+        }
+      } catch (err) {
+        console.warn('Sample purge warning:', err);
       }
+
+      // Clean local storage if sample items exist
+      const localClis = this.getClientes().filter(c => !sampleIds.includes(c.id));
+      localStorage.setItem(CLIENTES_KEY, JSON.stringify(localClis));
+      saveIDB(CLIENTES_KEY, localClis);
+
+      const localTats = this.getTatuagens().filter(t => !sampleIds.includes(t.id));
+      localStorage.setItem(TATUAGENS_KEY, JSON.stringify(localTats));
+      saveIDB(TATUAGENS_KEY, localTats);
 
       localStorage.setItem(INITIALIZED_KEY, 'true');
       saveIDB(INITIALIZED_KEY, 'true');

@@ -142,47 +142,41 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({
   return (
     <div className="flex flex-col gap-5">
       {/* View Mode Toggle Buttons */}
-      <div className="grid grid-cols-3 gap-2 bg-[#2A2A2A] p-1.5 rounded-2xl border border-[#3A3A3A] shadow-md">
+      <div className="grid grid-cols-3 gap-1.5 sm:gap-2 bg-[#2A2A2A] p-1.5 rounded-2xl border border-[#3A3A3A] shadow-md">
         <button
-          onClick={() => {
-            setViewMode('mes');
-          }}
-          className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+          onClick={() => setViewMode('mes')}
+          className={`flex items-center justify-center gap-1.5 py-2 sm:py-2.5 px-1.5 sm:px-3 rounded-xl text-[11px] sm:text-sm font-bold transition-all ${
             viewMode === 'mes'
               ? 'bg-[#FF6B35] text-white shadow-md shadow-[#FF6B35]/20'
               : 'text-[#999999] hover:text-white hover:bg-[#333333]'
           }`}
         >
-          <CalendarIcon size={16} />
-          <span>Mês (Calendário)</span>
+          <CalendarIcon size={15} />
+          <span className="truncate">Mês</span>
         </button>
 
         <button
-          onClick={() => {
-            setViewMode('semana');
-          }}
-          className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+          onClick={() => setViewMode('semana')}
+          className={`flex items-center justify-center gap-1.5 py-2 sm:py-2.5 px-1.5 sm:px-3 rounded-xl text-[11px] sm:text-sm font-bold transition-all ${
             viewMode === 'semana'
               ? 'bg-[#FF6B35] text-white shadow-md shadow-[#FF6B35]/20'
               : 'text-[#999999] hover:text-white hover:bg-[#333333]'
           }`}
         >
-          <CalendarIcon size={16} />
-          <span>Semana</span>
+          <CalendarIcon size={15} />
+          <span className="truncate">Semana</span>
         </button>
 
         <button
-          onClick={() => {
-            setViewMode('dia');
-          }}
-          className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+          onClick={() => setViewMode('dia')}
+          className={`flex items-center justify-center gap-1.5 py-2 sm:py-2.5 px-1.5 sm:px-3 rounded-xl text-[11px] sm:text-sm font-bold transition-all ${
             viewMode === 'dia'
               ? 'bg-[#FF6B35] text-white shadow-md shadow-[#FF6B35]/20'
               : 'text-[#999999] hover:text-white hover:bg-[#333333]'
           }`}
         >
-          <CalendarIcon size={16} />
-          <span>Dia Único</span>
+          <CalendarIcon size={15} />
+          <span className="truncate">Dia</span>
         </button>
       </div>
 

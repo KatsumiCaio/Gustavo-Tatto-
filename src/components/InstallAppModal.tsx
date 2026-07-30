@@ -62,9 +62,12 @@ export const InstallAppModal: React.FC<InstallAppModalProps> = ({ isOpen, onClos
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#3A3A3A] pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#FF6B35]/20 border border-[#FF6B35]/40 flex items-center justify-center text-[#FF6B35] shadow-lg">
-              <Smartphone size={24} />
-            </div>
+            <img
+              src="/pwa-192.svg"
+              alt="Gustavo Tattoo Logo"
+              referrerPolicy="no-referrer"
+              className="w-12 h-12 rounded-2xl bg-[#141414] border border-[#FF6B35]/40 object-cover shadow-lg"
+            />
             <div>
               <h3 className="text-lg font-black text-[#F5F5F5]">Instalar App no Celular</h3>
               <p className="text-xs text-[#999999]">Instale como um aplicativo no seu iPhone ou Android</p>

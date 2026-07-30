@@ -42,25 +42,28 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
                 <ArrowLeft size={20} />
               </button>
             ) : (
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF6B35] to-[#E63946] flex items-center justify-center text-white font-black text-xl shadow-md shadow-[#FF6B35]/20">
-                GT
-              </div>
+              <img
+                src="/pwa-192.svg"
+                alt="Gustavo Tattoo"
+                referrerPolicy="no-referrer"
+                className="w-10 h-10 rounded-xl object-cover shadow-md shadow-[#FF6B35]/20 border border-[#3A3A3A] bg-[#141414]"
+              />
             )}
 
-            <div>
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <h1 className="text-lg sm:text-xl font-bold text-[#F5F5F5] leading-tight">
+                <h1 className="text-base sm:text-xl font-bold text-[#F5F5F5] leading-tight truncate">
                   {displayTitle}
                 </h1>
-                <span className="hidden md:inline-flex items-center gap-1 bg-[#25D366]/10 text-[#25D366] text-[10px] font-bold px-2 py-0.5 rounded-full border border-[#25D366]/30">
+                <span className="hidden md:inline-flex items-center gap-1 bg-[#25D366]/10 text-[#25D366] text-[10px] font-bold px-2 py-0.5 rounded-full border border-[#25D366]/30 shrink-0">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#25D366] animate-pulse"></span>
                   Salvo
                 </span>
               </div>
               {subtitle ? (
-                <p className="text-xs text-[#999999]">{subtitle}</p>
+                <p className="text-xs text-[#999999] truncate">{subtitle}</p>
               ) : (
-                <p className="text-xs text-[#999999] font-medium hidden sm:block">
+                <p className="text-xs text-[#999999] font-medium hidden sm:block truncate">
                   Gustavo Tattoo Studio • Agenda Profissional
                 </p>
               )}

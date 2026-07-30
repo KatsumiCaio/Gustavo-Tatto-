@@ -88,6 +88,28 @@ export const SettingsScreen: React.FC = () => {
         </div>
       )}
 
+      {/* Studio Header Brand */}
+      <div className="bg-[#2D2D2D] border border-[#3A3A3A] p-5 rounded-3xl shadow-xl flex items-center gap-4">
+        <img
+          src="/pwa-512.svg"
+          alt="Gustavo Tattoo Logo"
+          referrerPolicy="no-referrer"
+          className="w-16 h-16 rounded-2xl bg-[#141414] border border-[#FF6B35]/40 object-cover shadow-lg shrink-0"
+        />
+        <div>
+          <h1 className="text-xl font-black text-[#F5F5F5] leading-tight">Gustavo Tattoo Studio</h1>
+          <p className="text-xs text-[#999999] mt-0.5">Sistema de Agenda & Gestão de Estúdio</p>
+          <a
+            href="https://instagram.com/gustavotomaz_tattoo"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-[#FF6B35] hover:underline mt-1"
+          >
+            @gustavotomaz_tattoo
+          </a>
+        </div>
+      </div>
+
       {/* Stats Cards */}
       <div>
         <h2 className="text-lg font-bold text-[#F5F5F5] mb-4 flex items-center gap-2 border-l-4 border-[#FF6B35] pl-3">
