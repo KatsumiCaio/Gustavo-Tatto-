@@ -85,9 +85,9 @@ export const SystemNotificationService = {
         navigator.serviceWorker.ready.then(reg => {
           reg.showNotification(options.title, {
             body: options.body,
-            icon: '/pwa-192.svg',
+            icon: '/pwa-192.png',
             tag: options.tag || 'tattoo-agenda',
-            badge: '/pwa-192.svg',
+            badge: '/pwa-192.png',
             vibrate: [200, 100, 200, 100, 300],
             data: options.data,
           } as any);

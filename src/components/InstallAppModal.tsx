@@ -63,7 +63,7 @@ export const InstallAppModal: React.FC<InstallAppModalProps> = ({ isOpen, onClos
         <div className="flex items-center justify-between border-b border-[#3A3A3A] pb-4">
           <div className="flex items-center gap-3">
             <img
-              src="/pwa-192.svg"
+              src="/app-logo.png"
               alt="Gustavo Tattoo Logo"
               referrerPolicy="no-referrer"
               className="w-12 h-12 rounded-2xl bg-[#141414] border border-[#FF6B35]/40 object-cover shadow-lg"

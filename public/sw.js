@@ -1,10 +1,11 @@
-const CACHE_NAME = 'gustavo-tattoo-v2';
+const CACHE_NAME = 'gustavo-tattoo-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/pwa-192.svg',
-  '/pwa-512.svg'
+  '/pwa-192.png',
+  '/pwa-512.png',
+  '/app-logo.png'
 ];
 
 // Scheduled notification queue stored in SW memory
@@ -100,8 +101,8 @@ function showSWNotification(title, body, tag, data) {
   self.registration.showNotification(title, {
     body: body || '',
     tag: tag || 'tattoo-agenda-' + Date.now(),
-    icon: '/pwa-192.svg',
-    badge: '/pwa-192.svg',
+    icon: '/pwa-192.png',
+    badge: '/pwa-192.png',
     vibrate: [200, 100, 200, 100, 300],
     data: data || { url: '/' },
     renotify: true,
@@ -135,8 +136,8 @@ function scheduleTimersInServiceWorker() {
         self.registration.showNotification(`📅 Lembrete Tattoo: ${n.cliente}`, {
           body: n.mensagem,
           tag: n.id,
-          icon: '/pwa-192.svg',
-          badge: '/pwa-192.svg',
+          icon: '/pwa-192.png',
+          badge: '/pwa-192.png',
           vibrate: [200, 100, 200, 100, 300],
           showTrigger: new TimestampTrigger(targetDate.getTime()),
           data: { url: '/' },

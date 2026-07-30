@@ -91,7 +91,7 @@ export const SettingsScreen: React.FC = () => {
       {/* Studio Header Brand */}
       <div className="bg-[#2D2D2D] border border-[#3A3A3A] p-5 rounded-3xl shadow-xl flex items-center gap-4">
         <img
-          src="/pwa-512.svg"
+          src="/app-logo.png"
           alt="Gustavo Tattoo Logo"
           referrerPolicy="no-referrer"
           className="w-16 h-16 rounded-2xl bg-[#141414] border border-[#FF6B35]/40 object-cover shadow-lg shrink-0"

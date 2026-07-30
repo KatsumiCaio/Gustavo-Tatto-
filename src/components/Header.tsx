@@ -43,7 +43,7 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
               </button>
             ) : (
               <img
-                src="/pwa-192.svg"
+                src="/app-logo.png"
                 alt="Gustavo Tattoo"
                 referrerPolicy="no-referrer"
                 className="w-10 h-10 rounded-xl object-cover shadow-md shadow-[#FF6B35]/20 border border-[#3A3A3A] bg-[#141414]"

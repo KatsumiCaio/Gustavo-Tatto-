@@ -3,13 +3,13 @@
   "name": "Gustavo Tattoo - Agenda & Estúdio",
   "icons": [
     {
-      "src": "/pwa-192.svg",
-      "type": "image/svg+xml",
+      "src": "/pwa-192.png",
+      "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "/pwa-512.svg",
-      "type": "image/svg+xml",
+      "src": "/pwa-512.png",
+      "type": "image/png",
       "sizes": "512x512"
     }
   ],
