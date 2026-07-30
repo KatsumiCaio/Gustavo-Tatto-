@@ -17,6 +17,7 @@ export const AddTatuagemScreen: React.FC = () => {
   const [descricao, setDescricao] = useState('');
   const [dateStr, setDateStr] = useState(() => new Date().toISOString().split('T')[0]);
   const [horario, setHorario] = useState('10:00');
+  const [horarioTermino, setHorarioTermino] = useState('14:00');
   const [local, setLocal] = useState('');
   const [valor, setValor] = useState('');
   const [observacoes, setObservacoes] = useState('');
@@ -40,6 +41,7 @@ export const AddTatuagemScreen: React.FC = () => {
         setDescricao(existing.descricao || '');
         setDateStr(existing.data || new Date().toISOString().split('T')[0]);
         setHorario(existing.horario || '10:00');
+        setHorarioTermino(existing.horarioTermino || '');
         setLocal(existing.local || '');
         setValor(existing.valor ? String(existing.valor) : '');
         setObservacoes(existing.observacoes || '');
@@ -85,6 +87,7 @@ export const AddTatuagemScreen: React.FC = () => {
       descricao: descricao.trim(),
       data: dateStr,
       horario,
+      horarioTermino: horarioTermino.trim() || undefined,
       local: local.trim() || 'Não especificado',
       valor: parseFloat(valor),
       status: (isEditing ? (tatuagens.find(t => t.id === editingId)?.status || 'agendado') : 'agendado') as any,
@@ -110,6 +113,7 @@ export const AddTatuagemScreen: React.FC = () => {
       setDescricao('');
       setDateStr(new Date().toISOString().split('T')[0]);
       setHorario('10:00');
+      setHorarioTermino('14:00');
       setLocal('');
       setValor('');
       setObservacoes('');
@@ -277,7 +281,7 @@ export const AddTatuagemScreen: React.FC = () => {
               <Calendar size={14} /> Agendamento
             </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-[#999999] mb-1">
                   Data *
@@ -293,7 +297,7 @@ export const AddTatuagemScreen: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-[#999999] mb-1">
-                  Horário *
+                  Horário de Início *
                 </label>
                 <input
                   type="time"
@@ -301,6 +305,18 @@ export const AddTatuagemScreen: React.FC = () => {
                   onChange={e => setHorario(e.target.value)}
                   className="w-full bg-[#1C1C1C] border border-[#3A3A3A] focus:border-[#FF6B35] rounded-xl px-3.5 py-2.5 text-sm text-[#F5F5F5] focus:outline-none"
                   required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#999999] mb-1">
+                  Horário de Término
+                </label>
+                <input
+                  type="time"
+                  value={horarioTermino}
+                  onChange={e => setHorarioTermino(e.target.value)}
+                  className="w-full bg-[#1C1C1C] border border-[#3A3A3A] focus:border-[#FF6B35] rounded-xl px-3.5 py-2.5 text-sm text-[#F5F5F5] focus:outline-none"
                 />
               </div>
             </div>

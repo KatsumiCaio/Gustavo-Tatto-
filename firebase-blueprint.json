@@ -23,6 +23,7 @@
         "descricao": { "type": "string" },
         "data": { "type": "string" },
         "horario": { "type": "string" },
+        "horarioTermino": { "type": "string" },
         "local": { "type": "string" },
         "valor": { "type": "number" },
         "status": { "type": "string" },

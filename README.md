@@ -53,7 +53,7 @@ O **Gustavo Tattoo Agenda** é uma plataforma focada em organizar a rotina diár
 * **[Tailwind CSS](https://tailwindcss.com/)** – Estilização utilitária e responsiva em *Dark Theme*.
 * **[Lucide React](https://lucide.dev/)** – Conjunto de ícones vetoriais modernos.
 * **[Motion / Framer Motion](https://motion.dev/)** – Animações suaves de transição de telas e elementos.
-* **LocalStorage API** – Persistência de dados local segura sem necessidade de servidor externo.
+* **Firebase Firestore** – Persistência de dados na nuvem em tempo real com sincronização automática e suporte offline.
 
 ---
 

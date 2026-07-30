@@ -25,7 +25,8 @@ export interface Tatuagem {
   cliente: string;
   descricao: string;
   data: string; // yyyy-MM-dd
-  horario: string; // HH:mm
+  horario: string; // HH:mm (horário de início)
+  horarioTermino?: string; // HH:mm (horário de término)
   local: string;
   valor: number;
   status: 'agendado' | 'concluído' | 'cancelado';

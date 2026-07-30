@@ -29,13 +29,22 @@ export const TatuagemCard: React.FC<TatuagemCardProps> = ({
     return `${d}/${m}/${y}`;
   };
 
+  const formatTimeRange = () => {
+    if (!tatuagem.horario) return '';
+    if (tatuagem.horarioTermino) {
+      return `${tatuagem.horario} às ${tatuagem.horarioTermino}`;
+    }
+    return tatuagem.horario;
+  };
+
   const getReminderWhatsAppUrl = () => {
     if (!tatuagem.telefone) return '#';
     const cleanPhone = tatuagem.telefone.replace(/\D/g, '');
     const formattedPhone = (cleanPhone.length === 10 || cleanPhone.length === 11) ? `55${cleanPhone}` : cleanPhone;
     
     const dateStr = formatDateDisplay(tatuagem.data);
-    const message = `Olá ${tatuagem.cliente}! Tudo bem? Passando para confirmar sua sessão de tatuagem agendada para o dia ${dateStr} às ${tatuagem.horario} no estúdio. Podemos confirmar a sua presença? 🎨✨`;
+    const timeText = tatuagem.horarioTermino ? `das ${tatuagem.horario} às ${tatuagem.horarioTermino}` : `às ${tatuagem.horario}`;
+    const message = `Olá ${tatuagem.cliente}! Tudo bem? Passando para confirmar sua sessão de tatuagem agendada para o dia ${dateStr} ${timeText} no estúdio. Podemos confirmar a sua presença? 🎨✨`;
     
     return `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
   };
@@ -74,7 +83,7 @@ export const TatuagemCard: React.FC<TatuagemCardProps> = ({
           </h3>
           <p className="text-xs text-[#999999] flex items-center gap-1.5 mt-0.5">
             <Clock size={13} className="text-[#FF6B35]" />
-            <span className="font-semibold text-white">{tatuagem.horario}</span> • {formatDateDisplay(tatuagem.data)}
+            <span className="font-semibold text-white">{formatTimeRange()}</span> • {formatDateDisplay(tatuagem.data)}
           </p>
         </div>
 
@@ -105,7 +114,7 @@ export const TatuagemCard: React.FC<TatuagemCardProps> = ({
                 <span>{tatuagem.telefone}</span>
               </a>
               <a
-                href={`https://wa.me/${tatuagem.telefone.replace(/\D/g, '').length === 11 || tatuagem.telefone.replace(/\D/g, '').length === 10 ? '55' + tatuagem.telefone.replace(/\D/g, '') : tatuagem.telefone.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá ${tatuagem.cliente}! Sobre o seu agendamento de tatuagem para o dia ${formatDateDisplay(tatuagem.data)} às ${tatuagem.horario}...`)}`}
+                href={`https://wa.me/${tatuagem.telefone.replace(/\D/g, '').length === 11 || tatuagem.telefone.replace(/\D/g, '').length === 10 ? '55' + tatuagem.telefone.replace(/\D/g, '') : tatuagem.telefone.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá ${tatuagem.cliente}! Sobre o seu agendamento de tatuagem para o dia ${formatDateDisplay(tatuagem.data)} (${formatTimeRange()})...`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-[11px] font-bold text-[#25D366] bg-[#25D366]/10 hover:bg-[#25D366]/20 px-2 py-0.5 rounded-lg border border-[#25D366]/30 transition-colors"
