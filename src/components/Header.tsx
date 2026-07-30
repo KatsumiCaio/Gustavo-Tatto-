@@ -42,12 +42,9 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
                 <ArrowLeft size={20} />
               </button>
             ) : (
-              <img
-                src="/app-logo.png"
-                alt="Gustavo Tattoo"
-                referrerPolicy="no-referrer"
-                className="w-10 h-10 rounded-xl object-cover shadow-md shadow-[#FF6B35]/20 border border-[#3A3A3A] bg-[#141414]"
-              />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF6B35] to-[#E55A2B] text-white font-black text-base flex items-center justify-center shadow-md shadow-[#FF6B35]/20 border border-[#FF6B35]/30 shrink-0">
+                GT
+              </div>
             )}
 
             <div className="min-w-0 flex-1">

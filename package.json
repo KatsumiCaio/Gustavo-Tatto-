@@ -10,13 +10,16 @@
     "preview": "vite preview --host 0.0.0.0 --port 3000"
   },
   "dependencies": {
+    "@napi-rs/canvas": "^1.0.3",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "firebase": "^12.16.0",
     "lucide-react": "^0.344.0",
     "motion": "^11.11.17",
+    "opentype.js": "^2.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "sharp": "^0.35.3",
     "tailwind-merge": "^2.3.0"
   },
   "devDependencies": {

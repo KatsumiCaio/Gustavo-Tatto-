@@ -90,12 +90,9 @@ export const SettingsScreen: React.FC = () => {
 
       {/* Studio Header Brand */}
       <div className="bg-[#2D2D2D] border border-[#3A3A3A] p-5 rounded-3xl shadow-xl flex items-center gap-4">
-        <img
-          src="/app-logo.png"
-          alt="Gustavo Tattoo Logo"
-          referrerPolicy="no-referrer"
-          className="w-16 h-16 rounded-2xl bg-[#141414] border border-[#FF6B35]/40 object-cover shadow-lg shrink-0"
-        />
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#FF6B35] to-[#E55A2B] text-white font-black text-2xl flex items-center justify-center shadow-lg shadow-[#FF6B35]/20 border border-[#FF6B35]/40 shrink-0">
+          GT
+        </div>
         <div>
           <h1 className="text-xl font-black text-[#F5F5F5] leading-tight">Gustavo Tattoo Studio</h1>
           <p className="text-xs text-[#999999] mt-0.5">Sistema de Agenda & Gestão de Estúdio</p>
