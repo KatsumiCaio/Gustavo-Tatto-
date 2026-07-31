@@ -47,7 +47,6 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
       path
     };
     console.error('Firestore Permission Error: ', JSON.stringify(errInfo));
-    throw new Error(JSON.stringify(errInfo));
   } else {
     console.warn(`Firestore [${operationType}] on [${path}] notice:`, errMessage);
   }

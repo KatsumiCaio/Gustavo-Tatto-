@@ -40,7 +40,7 @@ const ScreenRouter: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#1C1C1C] text-[#F5F5F5] flex flex-col selection:bg-[#FF6B35] selection:text-white">
       <Header />
-      <main className="flex-1 w-full max-w-5xl mx-auto px-3 sm:px-6 md:px-8 py-3 sm:py-6 pb-24 md:pb-12">
+      <main className="flex-1 w-full max-w-5xl mx-auto px-3 sm:px-6 md:px-8 py-3 sm:py-6 pb-24 sm:pb-28">
         {renderScreen()}
       </main>
       <BottomNav />
