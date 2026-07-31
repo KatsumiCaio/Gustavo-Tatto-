@@ -96,18 +96,56 @@ export const StorageService = {
     syncCallbacks = callbacks;
   },
 
+  async restoreFromIDB(): Promise<void> {
+    try {
+      const idbClis = await getIDB(CLIENTES_KEY);
+      if (idbClis && Array.isArray(idbClis) && idbClis.length > 0) {
+        const currentClis = this.getClientes();
+        if (currentClis.length === 0) {
+          localStorage.setItem(CLIENTES_KEY, JSON.stringify(idbClis));
+        }
+      }
+      const idbTats = await getIDB(TATUAGENS_KEY);
+      if (idbTats && Array.isArray(idbTats) && idbTats.length > 0) {
+        const currentTats = this.getTatuagens();
+        if (currentTats.length === 0) {
+          localStorage.setItem(TATUAGENS_KEY, JSON.stringify(idbTats));
+        }
+      }
+      const idbNotifs = await getIDB(NOTIFICACOES_KEY);
+      if (idbNotifs && Array.isArray(idbNotifs) && idbNotifs.length > 0) {
+        const currentNotifs = this.getNotificacoes();
+        if (currentNotifs.length === 0) {
+          localStorage.setItem(NOTIFICACOES_KEY, JSON.stringify(idbNotifs));
+        }
+      }
+    } catch (e) {
+      console.warn('Error restoring from IndexedDB:', e);
+    }
+  },
+
   async initStorage(): Promise<void> {
     try {
-      // Setup Firestore real-time listeners for all collections with error handlers
+      await this.restoreFromIDB();
+
       onSnapshot(
         collection(db, 'clientes'),
         (snapshot) => {
           const items: Cliente[] = [];
           snapshot.forEach((docSnap) => items.push(docSnap.data() as Cliente));
-          if (items.length > 0 || snapshot.metadata.fromCache === false) {
+          if (items.length > 0) {
             localStorage.setItem(CLIENTES_KEY, JSON.stringify(items));
             saveIDB(CLIENTES_KEY, items);
             if (syncCallbacks.onClientes) syncCallbacks.onClientes(items);
+          } else {
+            const localClis = this.getClientes();
+            if (localClis.length > 0) {
+              this.saveClientes(localClis);
+            } else if (snapshot.metadata.fromCache === false) {
+              localStorage.setItem(CLIENTES_KEY, JSON.stringify([]));
+              saveIDB(CLIENTES_KEY, []);
+              if (syncCallbacks.onClientes) syncCallbacks.onClientes([]);
+            }
           }
         },
         (error) => {
@@ -120,10 +158,19 @@ export const StorageService = {
         (snapshot) => {
           const items: Tatuagem[] = [];
           snapshot.forEach((docSnap) => items.push(docSnap.data() as Tatuagem));
-          if (items.length > 0 || snapshot.metadata.fromCache === false) {
+          if (items.length > 0) {
             localStorage.setItem(TATUAGENS_KEY, JSON.stringify(items));
             saveIDB(TATUAGENS_KEY, items);
             if (syncCallbacks.onTatuagens) syncCallbacks.onTatuagens(items);
+          } else {
+            const localTats = this.getTatuagens();
+            if (localTats.length > 0) {
+              this.saveTatuagens(localTats);
+            } else if (snapshot.metadata.fromCache === false) {
+              localStorage.setItem(TATUAGENS_KEY, JSON.stringify([]));
+              saveIDB(TATUAGENS_KEY, []);
+              if (syncCallbacks.onTatuagens) syncCallbacks.onTatuagens([]);
+            }
           }
         },
         (error) => {
@@ -136,10 +183,19 @@ export const StorageService = {
         (snapshot) => {
           const items: Notificacao[] = [];
           snapshot.forEach((docSnap) => items.push(docSnap.data() as Notificacao));
-          if (items.length > 0 || snapshot.metadata.fromCache === false) {
+          if (items.length > 0) {
             localStorage.setItem(NOTIFICACOES_KEY, JSON.stringify(items));
             saveIDB(NOTIFICACOES_KEY, items);
             if (syncCallbacks.onNotificacoes) syncCallbacks.onNotificacoes(items);
+          } else {
+            const localNotifs = this.getNotificacoes();
+            if (localNotifs.length > 0) {
+              this.saveNotificacoes(localNotifs);
+            } else if (snapshot.metadata.fromCache === false) {
+              localStorage.setItem(NOTIFICACOES_KEY, JSON.stringify([]));
+              saveIDB(NOTIFICACOES_KEY, []);
+              if (syncCallbacks.onNotificacoes) syncCallbacks.onNotificacoes([]);
+            }
           }
         },
         (error) => {
@@ -147,54 +203,10 @@ export const StorageService = {
         }
       );
 
-      // Clean up any remaining sample items from Firestore and local cache
-      const sampleIds = ['c1', 'c2', 'c3', 't1', 't2', 't3'];
-      try {
-        const batch = writeBatch(db);
-        let needsCommit = false;
-        
-        const clientesSnap = await getDocs(collection(db, 'clientes'));
-        clientesSnap.forEach((docSnap) => {
-          if (sampleIds.includes(docSnap.id)) {
-            batch.delete(docSnap.ref);
-            needsCommit = true;
-          }
-        });
-
-        const tatuagensSnap = await getDocs(collection(db, 'tatuagens'));
-        tatuagensSnap.forEach((docSnap) => {
-          if (sampleIds.includes(docSnap.id)) {
-            batch.delete(docSnap.ref);
-            needsCommit = true;
-          }
-        });
-
-        if (needsCommit) {
-          await batch.commit();
-        }
-      } catch (err) {
-        handleFirestoreError(err, OperationType.WRITE, 'samples_purge');
-      }
-
-      // Clean local storage if sample items exist
-      const localClis = this.getClientes().filter(c => !sampleIds.includes(c.id));
-      localStorage.setItem(CLIENTES_KEY, JSON.stringify(localClis));
-      saveIDB(CLIENTES_KEY, localClis);
-
-      const localTats = this.getTatuagens().filter(t => !sampleIds.includes(t.id));
-      localStorage.setItem(TATUAGENS_KEY, JSON.stringify(localTats));
-      saveIDB(TATUAGENS_KEY, localTats);
-
       localStorage.setItem(INITIALIZED_KEY, 'true');
       saveIDB(INITIALIZED_KEY, 'true');
     } catch (e) {
       console.warn('Firebase Firestore init fallback to local:', e);
-      // Fallback local restoration
-      const isInit = localStorage.getItem(INITIALIZED_KEY) || (await getIDB(INITIALIZED_KEY));
-      if (!isInit) {
-        this.saveClientes(sampleClientes);
-        this.saveTatuagens(sampleTatuagens);
-      }
     }
   },
 

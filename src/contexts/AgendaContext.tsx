@@ -109,6 +109,9 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const firedNotifIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
+    // Synchronously load local data immediately on mount
+    loadAllData();
+
     StorageService.subscribeSync({
       onTatuagens: (tats) => setTatuagens(tats),
       onClientes: (clis) => setClientes(clis),
@@ -116,6 +119,8 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     });
 
     const initAndLoad = async () => {
+      await StorageService.restoreFromIDB();
+      loadAllData();
       await StorageService.initStorage();
       loadAllData();
       setPermissaoNotificacaoState(SystemNotificationService.getPermissionState() as any);
