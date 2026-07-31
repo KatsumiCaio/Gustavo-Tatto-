@@ -83,7 +83,7 @@ export const TatuagemCard: React.FC<TatuagemCardProps> = ({
           </h3>
           <p className="text-xs text-[#999999] flex items-center gap-1.5 mt-0.5">
             <Clock size={13} className="text-[#FF6B35]" />
-            <span className="font-semibold text-white">{formatTimeRange()}</span> • {formatDateDisplay(tatuagem.data)}
+            <span className="font-semibold text-[#F5F5F5]">{formatTimeRange()}</span> • {formatDateDisplay(tatuagem.data)}
           </p>
         </div>
 

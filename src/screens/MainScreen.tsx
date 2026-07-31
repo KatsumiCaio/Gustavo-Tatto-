@@ -80,26 +80,30 @@ export const MainScreen: React.FC = () => {
 
         {/* PWA / iPhone App Download Banner & Notification Banner */}
         <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#FF6B35]/20 via-[#2D2D2D] to-[#1C1C1C] border border-[#FF6B35]/40 p-2.5 px-4 rounded-2xl text-xs text-[#F5F5F5] shadow-lg">
-            <Apple size={16} className="text-[#FF6B35]" />
-            <span>Quer usar como aplicativo no seu <strong>iPhone / Celular</strong>?</span>
+          <div className="inline-flex items-center justify-between gap-3 bg-[#FF6B35]/10 border border-[#FF6B35]/30 p-3 px-4 rounded-2xl text-xs text-[#F5F5F5] shadow-sm max-w-lg w-full sm:w-auto">
+            <div className="flex items-center gap-2">
+              <Apple size={18} className="text-[#FF6B35] shrink-0" />
+              <span>Quer usar como app no seu <strong>iPhone / Celular</strong>?</span>
+            </div>
             <button
               onClick={() => setIsInstallOpen(true)}
-              className="ml-1 bg-[#FF6B35] hover:bg-[#E85D2A] text-white font-bold px-3 py-1 rounded-xl text-[11px] transition-all flex items-center gap-1 shadow-md"
+              className="bg-[#FF6B35] hover:bg-[#E85D2A] text-white font-bold px-3 py-1.5 rounded-xl text-[11px] transition-all flex items-center gap-1 shadow-md shrink-0"
             >
-              <Smartphone size={13} /> Instalar App
+              <Smartphone size={13} /> Instalar
             </button>
           </div>
 
           {permissaoNotificacaoState !== 'granted' && (
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#FFB703]/20 via-[#2D2D2D] to-[#1C1C1C] border border-[#FFB703]/50 p-2.5 px-4 rounded-2xl text-xs text-[#F5F5F5] shadow-lg animate-fade-in">
-              <Bell size={16} className="text-[#FFB703] animate-bounce" />
-              <span>Receba os lembretes direto no seu <strong>Celular</strong>!</span>
+            <div className="inline-flex items-center justify-between gap-3 bg-[#FFB703]/10 border border-[#FFB703]/40 p-3 px-4 rounded-2xl text-xs text-[#F5F5F5] shadow-sm max-w-lg w-full sm:w-auto animate-fade-in">
+              <div className="flex items-center gap-2">
+                <Bell size={18} className="text-[#FFB703] shrink-0 animate-bounce" />
+                <span>Receba os lembretes direto no seu <strong>Celular</strong>!</span>
+              </div>
               <button
                 onClick={() => setIsNotifPromptOpen(true)}
-                className="ml-1 bg-[#FFB703] hover:bg-[#e0a100] text-black font-extrabold px-3 py-1 rounded-xl text-[11px] transition-all flex items-center gap-1 shadow-md"
+                className="bg-[#FFB703] hover:bg-[#e0a100] text-black font-extrabold px-3 py-1.5 rounded-xl text-[11px] transition-all flex items-center gap-1 shadow-md shrink-0"
               >
-                <ShieldCheck size={13} /> Ativar Notificações
+                <ShieldCheck size={13} /> Ativar
               </button>
             </div>
           )}
@@ -146,7 +150,7 @@ export const MainScreen: React.FC = () => {
           <div className="flex items-center justify-center gap-1 text-[#FF6B35] text-xs font-semibold mb-1">
             <Clock size={14} /> Agendados
           </div>
-          <span className="text-xl sm:text-2xl font-black text-white">
+          <span className="text-xl sm:text-2xl font-black text-[#F5F5F5]">
             {tatuagens.filter(t => t.status === 'agendado').length}
           </span>
         </div>
@@ -164,7 +168,7 @@ export const MainScreen: React.FC = () => {
           <div className="flex items-center justify-center gap-1 text-[#FFB703] text-xs font-semibold mb-1">
             <Users size={14} /> Clientes
           </div>
-          <span className="text-xl sm:text-2xl font-black text-white">
+          <span className="text-xl sm:text-2xl font-black text-[#F5F5F5]">
             {clientes.length}
           </span>
         </div>

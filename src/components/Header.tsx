@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAgenda } from '../contexts/AgendaContext';
 import { ScreenName } from '../types';
-import { ArrowLeft, Settings, Smartphone, Bell } from 'lucide-react';
+import { ArrowLeft, Settings, Smartphone, Bell, Sun, Moon } from 'lucide-react';
 import { InstallAppModal } from './InstallAppModal';
 import { NotificationPromptModal } from './NotificationPromptModal';
 
@@ -22,7 +22,7 @@ const titlesMap: Record<ScreenName, string> = {
 };
 
 export const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
-  const { currentScreen, goBack } = useAgenda();
+  const { currentScreen, goBack, theme, toggleTheme } = useAgenda();
 
   const displayTitle = title || titlesMap[currentScreen] || 'Gustavo Tattoo';
 
@@ -63,9 +63,21 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
           </div>
         </div>
 
-        {/* Status Badge */}
-        <div className="flex items-center">
-          <span className="inline-flex items-center gap-1.5 bg-[#25D366]/10 text-[#25D366] text-xs font-bold px-2.5 py-1 rounded-full border border-[#25D366]/30">
+        {/* Right actions */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-xl bg-[#2A2A2A] text-[#FFB703] hover:bg-[#3A3A3A] border border-[#3A3A3A] transition-all flex items-center gap-1.5 text-xs font-semibold shadow-sm"
+            title={theme === 'dark' ? 'Mudar para Modo Claro' : 'Mudar para Modo Escuro'}
+            aria-label="Alternar tema"
+          >
+            {theme === 'dark' ? <Sun size={18} className="text-[#FFB703]" /> : <Moon size={18} className="text-[#6366F1]" />}
+            <span className="hidden sm:inline text-[#F5F5F5]">
+              {theme === 'dark' ? 'Claro' : 'Escuro'}
+            </span>
+          </button>
+
+          <span className="inline-flex items-center gap-1.5 bg-[#25D366]/10 text-[#25D366] text-xs font-bold px-2.5 py-1.5 rounded-full border border-[#25D366]/30">
             <span className="w-1.5 h-1.5 rounded-full bg-[#25D366] animate-pulse"></span>
             Online
           </span>

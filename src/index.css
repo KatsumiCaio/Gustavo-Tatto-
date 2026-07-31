@@ -7,6 +7,7 @@
     background-color: #1C1C1C;
     color: #F5F5F5;
     font-family: 'Plus Jakarta Sans', sans-serif;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 }
 
@@ -32,3 +33,136 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #FF6B35;
 }
+
+/* =========================================================
+   LIGHT MODE OVERRIDES (.light)
+   ========================================================= */
+.light, html.light {
+  color-scheme: light;
+}
+
+.light body {
+  background-color: #F4F5F7 !important;
+  color: #0F172A !important;
+}
+
+.light ::-webkit-scrollbar-track {
+  background: #F4F5F7;
+}
+
+.light ::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+}
+
+/* Backgrounds */
+.light .bg-\[\#1C1C1C\] {
+  background-color: #F4F5F7 !important;
+}
+.light .bg-\[\#1C1C1C\]\/95 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+}
+.light .bg-\[\#1E1E1E\] {
+  background-color: #FFFFFF !important;
+}
+.light .bg-\[\#202020\] {
+  background-color: #FFFFFF !important;
+}
+.light .bg-\[\#222222\] {
+  background-color: #F8FAFC !important;
+}
+.light .bg-\[\#242424\] {
+  background-color: #FFFFFF !important;
+}
+.light .bg-\[\#252525\] {
+  background-color: #FFFFFF !important;
+}
+.light .bg-\[\#2A2A2A\] {
+  background-color: #E2E8F0 !important;
+}
+.light .bg-\[\#2D2D2D\] {
+  background-color: #FFFFFF !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+}
+.light .bg-\[\#333333\] {
+  background-color: #F1F5F9 !important;
+}
+.light .bg-\[\#3A3A3A\] {
+  background-color: #E2E8F0 !important;
+}
+.light .bg-\[\#2A2421\] {
+  background-color: #FFF7ED !important;
+}
+
+/* Borders */
+.light .border-\[\#2A2A2A\] {
+  border-color: #E2E8F0 !important;
+}
+.light .border-\[\#383838\] {
+  border-color: #E2E8F0 !important;
+}
+.light .border-\[\#3A3A3A\] {
+  border-color: #E2E8F0 !important;
+}
+.light .border-\[\#4A4A4A\] {
+  border-color: #CBD5E1 !important;
+}
+
+/* Text Colors */
+.light .text-\[\#F5F5F5\] {
+  color: #0F172A !important;
+}
+.light .text-\[\#CCCCCC\] {
+  color: #334155 !important;
+}
+.light .text-\[\#AAAAAA\] {
+  color: #475569 !important;
+}
+.light .text-\[\#999999\] {
+  color: #64748B !important;
+}
+.light .text-\[\#888888\] {
+  color: #64748B !important;
+}
+.light .text-\[\#777777\] {
+  color: #64748B !important;
+}
+.light .text-\[\#666666\] {
+  color: #64748B !important;
+}
+
+/* Inputs, Textareas, Selects */
+.light input:not([type="checkbox"]):not([type="radio"]),
+.light textarea,
+.light select {
+  color: #0F172A !important;
+  background-color: #FFFFFF !important;
+  border-color: #CBD5E1 !important;
+}
+
+.light input::placeholder,
+.light textarea::placeholder {
+  color: #94A3B8 !important;
+}
+
+.light select option {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+}
+
+/* Modals & Backdrop */
+.light .bg-black\/80,
+.light .bg-black\/70 {
+  background-color: rgba(15, 23, 42, 0.6) !important;
+}
+
+/* Hover overrides for light mode */
+.light .hover\:bg-\[\#3A3A3A\]:hover {
+  background-color: #CBD5E1 !important;
+}
+.light .hover\:bg-\[\#2A2A2A\]:hover {
+  background-color: #E2E8F0 !important;
+}
+.light .hover\:text-white:hover {
+  color: #0F172A !important;
+}
+

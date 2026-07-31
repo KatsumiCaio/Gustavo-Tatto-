@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useAgenda } from '../contexts/AgendaContext';
 import { StorageService } from '../services/storage';
-import { Trash2, History, Download, Upload, RefreshCw, AlertTriangle, CheckCircle2, ShieldCheck, DollarSign, Calendar, CheckCircle, XCircle } from 'lucide-react';
+import { Trash2, History, Download, Upload, RefreshCw, AlertTriangle, CheckCircle2, ShieldCheck, DollarSign, Calendar, CheckCircle, XCircle, Sun, Moon, Palette } from 'lucide-react';
 import { ConfirmModal } from '../components/ConfirmModal';
 
 export const SettingsScreen: React.FC = () => {
-  const { tatuagens, clientes, clearAllData, reloadData, navigate } = useAgenda();
+  const { tatuagens, clientes, clearAllData, reloadData, navigate, theme, toggleTheme } = useAgenda();
 
   const [syncKey, setSyncKey] = useState('');
   const [feedbackMsg, setFeedbackMsg] = useState('');
@@ -89,21 +89,76 @@ export const SettingsScreen: React.FC = () => {
       )}
 
       {/* Studio Header Brand */}
-      <div className="bg-[#2D2D2D] border border-[#3A3A3A] p-5 rounded-3xl shadow-xl flex items-center gap-4">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#FF6B35] to-[#E55A2B] text-white font-black text-2xl flex items-center justify-center shadow-lg shadow-[#FF6B35]/20 border border-[#FF6B35]/40 shrink-0">
-          GT
+      <div className="bg-[#2D2D2D] border border-[#3A3A3A] p-5 rounded-3xl shadow-xl flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#FF6B35] to-[#E55A2B] text-white font-black text-2xl flex items-center justify-center shadow-lg shadow-[#FF6B35]/20 border border-[#FF6B35]/40 shrink-0">
+            GT
+          </div>
+          <div>
+            <h1 className="text-xl font-black text-[#F5F5F5] leading-tight">Gustavo Tattoo Studio</h1>
+            <p className="text-xs text-[#999999] mt-0.5">Sistema de Agenda & Gestão de Estúdio</p>
+            <a
+              href="https://instagram.com/gustavotomaz_tattoo"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-[#FF6B35] hover:underline mt-1"
+            >
+              @gustavotomaz_tattoo
+            </a>
+          </div>
         </div>
-        <div>
-          <h1 className="text-xl font-black text-[#F5F5F5] leading-tight">Gustavo Tattoo Studio</h1>
-          <p className="text-xs text-[#999999] mt-0.5">Sistema de Agenda & Gestão de Estúdio</p>
-          <a
-            href="https://instagram.com/gustavotomaz_tattoo"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs font-semibold text-[#FF6B35] hover:underline mt-1"
+      </div>
+
+      {/* Theme / Appearance Card */}
+      <div className="bg-[#2D2D2D] border border-[#3A3A3A] p-5 rounded-3xl shadow-xl space-y-4">
+        <div className="flex items-center gap-2 border-b border-[#3A3A3A] pb-3">
+          <Palette size={20} className="text-[#FF6B35]" />
+          <div>
+            <h2 className="text-base font-bold text-[#F5F5F5]">Aparência do Aplicativo</h2>
+            <p className="text-xs text-[#999999]">Escolha entre o Modo Escuro (Dark) e Modo Claro (Light)</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={() => theme !== 'dark' && toggleTheme()}
+            className={`p-4 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
+              theme === 'dark'
+                ? 'bg-[#1C1C1C] border-[#FF6B35] text-[#FF6B35] shadow-md shadow-[#FF6B35]/10'
+                : 'bg-[#2A2A2A] border-[#3A3A3A] text-[#999999] hover:text-[#F5F5F5]'
+            }`}
           >
-            @gustavotomaz_tattoo
-          </a>
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-[#2D2D2D] text-[#FFB703]">
+                <Moon size={22} />
+              </div>
+              <div className="text-left">
+                <span className="block text-sm font-bold">Modo Escuro</span>
+                <span className="text-[11px] opacity-75">Design Studio Dark</span>
+              </div>
+            </div>
+            {theme === 'dark' && <CheckCircle size={20} className="text-[#FF6B35] shrink-0" />}
+          </button>
+
+          <button
+            onClick={() => theme !== 'light' && toggleTheme()}
+            className={`p-4 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
+              theme === 'light'
+                ? 'bg-[#F4F5F7] border-[#FF6B35] text-[#FF6B35] shadow-md'
+                : 'bg-[#2A2A2A] border-[#3A3A3A] text-[#999999] hover:text-[#F5F5F5]'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-[#E2E8F0] text-[#FF6B35]">
+                <Sun size={22} />
+              </div>
+              <div className="text-left">
+                <span className="block text-sm font-bold">Modo Claro</span>
+                <span className="text-[11px] opacity-75">Design Clean Light</span>
+              </div>
+            </div>
+            {theme === 'light' && <CheckCircle size={20} className="text-[#FF6B35] shrink-0" />}
+          </button>
         </div>
       </div>
 

@@ -71,6 +71,8 @@ interface AgendaContextType {
   unreadNotificacoesCount: number;
   currentScreen: ScreenName;
   navParams: NavigationParams;
+  theme: 'dark' | 'light';
+  toggleTheme: () => void;
   permissaoNotificacaoState: 'granted' | 'denied' | 'default';
   solicitarPermissaoNotificacaoSistema: () => Promise<boolean>;
   dispararNotificacaoTeste: () => boolean;
@@ -105,6 +107,20 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [permissaoNotificacaoState, setPermissaoNotificacaoState] = useState<'granted' | 'denied' | 'default'>(
     SystemNotificationService.getPermissionState() as any
   );
+
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    const saved = localStorage.getItem('app_theme');
+    return saved === 'light' ? 'light' : 'dark';
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('light', theme === 'light');
+    localStorage.setItem('app_theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
 
   const firedNotifIds = useRef<Set<string>>(new Set());
 
@@ -442,6 +458,8 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         unreadNotificacoesCount,
         currentScreen,
         navParams,
+        theme,
+        toggleTheme,
         permissaoNotificacaoState,
         solicitarPermissaoNotificacaoSistema,
         dispararNotificacaoTeste,
