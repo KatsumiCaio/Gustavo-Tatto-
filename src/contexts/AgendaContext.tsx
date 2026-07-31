@@ -259,6 +259,7 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
     const updatedTats = [newTatuagem, ...tatuagens];
     setTatuagens(updatedTats);
+    StorageService.saveSingleTatuagem(newTatuagem);
     StorageService.saveTatuagens(updatedTats);
 
     // Sync notification
@@ -270,9 +271,12 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const updateTatuagem = (id: string, updates: Partial<Tatuagem>) => {
     const updatedTats = tatuagens.map(t => (t.id === id ? { ...t, ...updates } : t));
     setTatuagens(updatedTats);
+    const targetTat = updatedTats.find(t => t.id === id);
+    if (targetTat) {
+      StorageService.saveSingleTatuagem(targetTat);
+    }
     StorageService.saveTatuagens(updatedTats);
 
-    const targetTat = updatedTats.find(t => t.id === id);
     if (targetTat) {
       const updatedNotifs = syncNotificationForTatuagem(targetTat, notificacoes);
       setNotificacoes(updatedNotifs);
@@ -283,8 +287,11 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const deleteTatuagem = (id: string) => {
     const updatedTats = tatuagens.filter(t => t.id !== id);
     setTatuagens(updatedTats);
+    StorageService.deleteSingleTatuagem(id);
     StorageService.saveTatuagens(updatedTats);
 
+    const targetNotifs = notificacoes.filter(n => n.tatuagemId === id);
+    targetNotifs.forEach(n => StorageService.deleteSingleNotificacao(n.id));
     const updatedNotifs = notificacoes.filter(n => n.tatuagemId !== id);
     setNotificacoes(updatedNotifs);
     StorageService.saveNotificacoes(updatedNotifs);
@@ -297,6 +304,7 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
     const updated = [...clientes, newCliente];
     setClientes(updated);
+    StorageService.saveSingleCliente(newCliente);
     StorageService.saveClientes(updated);
   };
 
@@ -304,6 +312,10 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const oldClient = clientes.find(c => c.id === id);
     const updatedClientes = clientes.map(c => (c.id === id ? { ...c, ...updates } : c));
     setClientes(updatedClientes);
+    const targetCli = updatedClientes.find(c => c.id === id);
+    if (targetCli) {
+      StorageService.saveSingleCliente(targetCli);
+    }
     StorageService.saveClientes(updatedClientes);
 
     // If client name or phone changed, update associated tattoos & notificacoes
@@ -342,6 +354,7 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const deleteCliente = (id: string) => {
     const updated = clientes.filter(c => c.id !== id);
     setClientes(updated);
+    StorageService.deleteSingleCliente(id);
     StorageService.saveClientes(updated);
   };
 

@@ -198,6 +198,66 @@ export const StorageService = {
     }
   },
 
+  async saveSingleCliente(cliente: Cliente): Promise<void> {
+    try {
+      setDoc(doc(db, 'clientes', cliente.id), sanitizeForFirestore(cliente)).catch((err) => {
+        handleFirestoreError(err, OperationType.WRITE, `clientes/${cliente.id}`);
+      });
+    } catch (err) {
+      console.warn('Firestore saveSingleCliente error:', err);
+    }
+  },
+
+  async deleteSingleCliente(id: string): Promise<void> {
+    try {
+      deleteDoc(doc(db, 'clientes', id)).catch((err) => {
+        handleFirestoreError(err, OperationType.DELETE, `clientes/${id}`);
+      });
+    } catch (err) {
+      console.warn('Firestore deleteSingleCliente error:', err);
+    }
+  },
+
+  async saveSingleTatuagem(tatuagem: Tatuagem): Promise<void> {
+    try {
+      setDoc(doc(db, 'tatuagens', tatuagem.id), sanitizeForFirestore(tatuagem)).catch((err) => {
+        handleFirestoreError(err, OperationType.WRITE, `tatuagens/${tatuagem.id}`);
+      });
+    } catch (err) {
+      console.warn('Firestore saveSingleTatuagem error:', err);
+    }
+  },
+
+  async deleteSingleTatuagem(id: string): Promise<void> {
+    try {
+      deleteDoc(doc(db, 'tatuagens', id)).catch((err) => {
+        handleFirestoreError(err, OperationType.DELETE, `tatuagens/${id}`);
+      });
+    } catch (err) {
+      console.warn('Firestore deleteSingleTatuagem error:', err);
+    }
+  },
+
+  async saveSingleNotificacao(notificacao: Notificacao): Promise<void> {
+    try {
+      setDoc(doc(db, 'notificacoes', notificacao.id), sanitizeForFirestore(notificacao)).catch((err) => {
+        handleFirestoreError(err, OperationType.WRITE, `notificacoes/${notificacao.id}`);
+      });
+    } catch (err) {
+      console.warn('Firestore saveSingleNotificacao error:', err);
+    }
+  },
+
+  async deleteSingleNotificacao(id: string): Promise<void> {
+    try {
+      deleteDoc(doc(db, 'notificacoes', id)).catch((err) => {
+        handleFirestoreError(err, OperationType.DELETE, `notificacoes/${id}`);
+      });
+    } catch (err) {
+      console.warn('Firestore deleteSingleNotificacao error:', err);
+    }
+  },
+
   getClientes(): Cliente[] {
     try {
       const data = localStorage.getItem(CLIENTES_KEY);
@@ -216,22 +276,16 @@ export const StorageService = {
       console.error('Error saving clientes locally:', e);
     }
 
-    // Sync to Firestore
+    // Direct Firestore sync without blocking getDocs call
     try {
-      const snapshot = await getDocs(collection(db, 'clientes'));
-      const existingIds = new Set(snapshot.docs.map((d) => d.id));
-      const currentIds = new Set(clientes.map((c) => c.id));
-
+      if (clientes.length === 0) return;
       const batch = writeBatch(db);
       clientes.forEach((c) => {
         batch.set(doc(db, 'clientes', c.id), sanitizeForFirestore(c));
       });
-      existingIds.forEach((id) => {
-        if (!currentIds.has(id)) {
-          batch.delete(doc(db, 'clientes', id));
-        }
+      batch.commit().catch((err) => {
+        console.warn('Firestore clientes batch write warning:', err);
       });
-      await batch.commit();
     } catch (err) {
       console.warn('Firestore clientes save warning:', err);
     }
@@ -255,22 +309,16 @@ export const StorageService = {
       console.error('Error saving tatuagens locally:', e);
     }
 
-    // Sync to Firestore
+    // Direct Firestore sync without blocking getDocs call
     try {
-      const snapshot = await getDocs(collection(db, 'tatuagens'));
-      const existingIds = new Set(snapshot.docs.map((d) => d.id));
-      const currentIds = new Set(tatuagens.map((t) => t.id));
-
+      if (tatuagens.length === 0) return;
       const batch = writeBatch(db);
       tatuagens.forEach((t) => {
         batch.set(doc(db, 'tatuagens', t.id), sanitizeForFirestore(t));
       });
-      existingIds.forEach((id) => {
-        if (!currentIds.has(id)) {
-          batch.delete(doc(db, 'tatuagens', id));
-        }
+      batch.commit().catch((err) => {
+        console.warn('Firestore tatuagens batch write warning:', err);
       });
-      await batch.commit();
     } catch (err) {
       console.warn('Firestore tatuagens save warning:', err);
     }
@@ -294,22 +342,16 @@ export const StorageService = {
       console.error('Error saving notificacoes locally:', e);
     }
 
-    // Sync to Firestore
+    // Direct Firestore sync without blocking getDocs call
     try {
-      const snapshot = await getDocs(collection(db, 'notificacoes'));
-      const existingIds = new Set(snapshot.docs.map((d) => d.id));
-      const currentIds = new Set(notificacoes.map((n) => n.id));
-
+      if (notificacoes.length === 0) return;
       const batch = writeBatch(db);
       notificacoes.forEach((n) => {
         batch.set(doc(db, 'notificacoes', n.id), sanitizeForFirestore(n));
       });
-      existingIds.forEach((id) => {
-        if (!currentIds.has(id)) {
-          batch.delete(doc(db, 'notificacoes', id));
-        }
+      batch.commit().catch((err) => {
+        console.warn('Firestore notificacoes batch write warning:', err);
       });
-      await batch.commit();
     } catch (err) {
       console.warn('Firestore notificacoes save warning:', err);
     }
