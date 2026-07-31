@@ -1,6 +1,7 @@
 import { Tatuagem, Cliente, Notificacao } from '../types';
 import { db } from '../lib/firebase';
 import { collection, doc, setDoc, deleteDoc, onSnapshot, getDocs, writeBatch } from 'firebase/firestore';
+import { handleFirestoreError, OperationType } from '../lib/firebaseErrors';
 
 const TATUAGENS_KEY = 'tatuagens_data';
 const CLIENTES_KEY = 'clientes_data';
@@ -97,36 +98,54 @@ export const StorageService = {
 
   async initStorage(): Promise<void> {
     try {
-      // Setup Firestore real-time listeners for all collections
-      onSnapshot(collection(db, 'clientes'), (snapshot) => {
-        const items: Cliente[] = [];
-        snapshot.forEach((docSnap) => items.push(docSnap.data() as Cliente));
-        if (items.length > 0 || snapshot.metadata.fromCache === false) {
-          localStorage.setItem(CLIENTES_KEY, JSON.stringify(items));
-          saveIDB(CLIENTES_KEY, items);
-          if (syncCallbacks.onClientes) syncCallbacks.onClientes(items);
+      // Setup Firestore real-time listeners for all collections with error handlers
+      onSnapshot(
+        collection(db, 'clientes'),
+        (snapshot) => {
+          const items: Cliente[] = [];
+          snapshot.forEach((docSnap) => items.push(docSnap.data() as Cliente));
+          if (items.length > 0 || snapshot.metadata.fromCache === false) {
+            localStorage.setItem(CLIENTES_KEY, JSON.stringify(items));
+            saveIDB(CLIENTES_KEY, items);
+            if (syncCallbacks.onClientes) syncCallbacks.onClientes(items);
+          }
+        },
+        (error) => {
+          handleFirestoreError(error, OperationType.GET, 'clientes');
         }
-      });
+      );
 
-      onSnapshot(collection(db, 'tatuagens'), (snapshot) => {
-        const items: Tatuagem[] = [];
-        snapshot.forEach((docSnap) => items.push(docSnap.data() as Tatuagem));
-        if (items.length > 0 || snapshot.metadata.fromCache === false) {
-          localStorage.setItem(TATUAGENS_KEY, JSON.stringify(items));
-          saveIDB(TATUAGENS_KEY, items);
-          if (syncCallbacks.onTatuagens) syncCallbacks.onTatuagens(items);
+      onSnapshot(
+        collection(db, 'tatuagens'),
+        (snapshot) => {
+          const items: Tatuagem[] = [];
+          snapshot.forEach((docSnap) => items.push(docSnap.data() as Tatuagem));
+          if (items.length > 0 || snapshot.metadata.fromCache === false) {
+            localStorage.setItem(TATUAGENS_KEY, JSON.stringify(items));
+            saveIDB(TATUAGENS_KEY, items);
+            if (syncCallbacks.onTatuagens) syncCallbacks.onTatuagens(items);
+          }
+        },
+        (error) => {
+          handleFirestoreError(error, OperationType.GET, 'tatuagens');
         }
-      });
+      );
 
-      onSnapshot(collection(db, 'notificacoes'), (snapshot) => {
-        const items: Notificacao[] = [];
-        snapshot.forEach((docSnap) => items.push(docSnap.data() as Notificacao));
-        if (items.length > 0 || snapshot.metadata.fromCache === false) {
-          localStorage.setItem(NOTIFICACOES_KEY, JSON.stringify(items));
-          saveIDB(NOTIFICACOES_KEY, items);
-          if (syncCallbacks.onNotificacoes) syncCallbacks.onNotificacoes(items);
+      onSnapshot(
+        collection(db, 'notificacoes'),
+        (snapshot) => {
+          const items: Notificacao[] = [];
+          snapshot.forEach((docSnap) => items.push(docSnap.data() as Notificacao));
+          if (items.length > 0 || snapshot.metadata.fromCache === false) {
+            localStorage.setItem(NOTIFICACOES_KEY, JSON.stringify(items));
+            saveIDB(NOTIFICACOES_KEY, items);
+            if (syncCallbacks.onNotificacoes) syncCallbacks.onNotificacoes(items);
+          }
+        },
+        (error) => {
+          handleFirestoreError(error, OperationType.GET, 'notificacoes');
         }
-      });
+      );
 
       // Clean up any remaining sample items from Firestore and local cache
       const sampleIds = ['c1', 'c2', 'c3', 't1', 't2', 't3'];
@@ -154,7 +173,7 @@ export const StorageService = {
           await batch.commit();
         }
       } catch (err) {
-        console.warn('Sample purge warning:', err);
+        handleFirestoreError(err, OperationType.WRITE, 'samples_purge');
       }
 
       // Clean local storage if sample items exist
