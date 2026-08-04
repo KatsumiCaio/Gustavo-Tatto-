@@ -95,7 +95,14 @@ interface AgendaContextType {
   getTatuagensForMonth: (date: Date) => Tatuagem[];
 }
 
-const AgendaContext = createContext<AgendaContextType | undefined>(undefined);
+const globalForContext = (typeof window !== 'undefined' ? window : {}) as any;
+
+const AgendaContext: React.Context<AgendaContextType | undefined> =
+  globalForContext.__AGENDA_CONTEXT__ || createContext<AgendaContextType | undefined>(undefined);
+
+if (typeof window !== 'undefined') {
+  globalForContext.__AGENDA_CONTEXT__ = AgendaContext;
+}
 
 export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [tatuagens, setTatuagens] = useState<Tatuagem[]>([]);
@@ -105,12 +112,22 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [navParams, setNavParams] = useState<NavigationParams>({});
   const [history, setHistory] = useState<{ screen: ScreenName; params: NavigationParams }[]>([]);
   const [permissaoNotificacaoState, setPermissaoNotificacaoState] = useState<'granted' | 'denied' | 'default'>(
-    SystemNotificationService.getPermissionState() as any
+    () => {
+      try {
+        return SystemNotificationService.getPermissionState() as any;
+      } catch (e) {
+        return 'default';
+      }
+    }
   );
 
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
-    const saved = localStorage.getItem('app_theme');
-    return saved === 'light' ? 'light' : 'dark';
+    try {
+      const saved = localStorage.getItem('app_theme');
+      return saved === 'light' ? 'light' : 'dark';
+    } catch (e) {
+      return 'dark';
+    }
   });
 
   useEffect(() => {
@@ -220,7 +237,10 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   };
 
   const syncNotificationForTatuagem = (tatuagem: Tatuagem, currentNotifs: Notificacao[]): Notificacao[] => {
-    // Remove existing notification for this tattoo
+    // Delete existing notification for this tattoo from Firestore & state
+    const oldNotifs = currentNotifs.filter(n => n.tatuagemId === tatuagem.id);
+    oldNotifs.forEach(n => StorageService.deleteSingleNotificacao(n.id));
+
     const filtered = currentNotifs.filter(n => n.tatuagemId !== tatuagem.id);
 
     if (!tatuagem.notificacaoAtivar) {
@@ -250,6 +270,8 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       lida: false,
       criadaEm: new Date().toISOString(),
     };
+
+    StorageService.saveSingleNotificacao(newNotif);
 
     return [newNotif, ...filtered];
   };
@@ -394,6 +416,7 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const deleteNotificacao = (id: string) => {
     const updated = notificacoes.filter(n => n.id !== id);
     setNotificacoes(updated);
+    StorageService.deleteSingleNotificacao(id);
     StorageService.saveNotificacoes(updated);
   };
 
@@ -487,10 +510,42 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   );
 };
 
+const dummyContextFallback: AgendaContextType = {
+  tatuagens: [],
+  clientes: [],
+  notificacoes: [],
+  unreadNotificacoesCount: 0,
+  currentScreen: 'main',
+  navParams: {},
+  theme: 'dark',
+  toggleTheme: () => {},
+  permissaoNotificacaoState: 'default',
+  solicitarPermissaoNotificacaoSistema: async () => false,
+  dispararNotificacaoTeste: () => false,
+  dispararNotificacaoTesteComDelay: () => false,
+  navigate: () => {},
+  goBack: () => {},
+  addTatuagem: () => {},
+  updateTatuagem: () => {},
+  deleteTatuagem: () => {},
+  addCliente: () => {},
+  updateCliente: () => {},
+  deleteCliente: () => {},
+  marcarNotificacaoLida: () => {},
+  marcarTodasNotificacoesLidas: () => {},
+  deleteNotificacao: () => {},
+  clearAllData: () => {},
+  reloadData: () => {},
+  getTatuagensForDate: () => [],
+  getTatuagensForWeek: () => [],
+  getTatuagensForMonth: () => [],
+};
+
 export const useAgenda = () => {
   const context = useContext(AgendaContext);
   if (!context) {
-    throw new Error('useAgenda deve ser usado dentro de AgendaProvider');
+    console.warn('useAgenda: Contexto não encontrado ou em transição HMR. Usando fallback seguro.');
+    return dummyContextFallback;
   }
   return context;
 };

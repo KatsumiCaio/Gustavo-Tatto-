@@ -183,7 +183,8 @@ export const StorageService = {
         (snapshot) => {
           const items: Notificacao[] = [];
           snapshot.forEach((docSnap) => items.push(docSnap.data() as Notificacao));
-          if (items.length > 0) {
+          const isInitialized = localStorage.getItem(INITIALIZED_KEY) === 'true';
+          if (items.length > 0 || isInitialized) {
             localStorage.setItem(NOTIFICACOES_KEY, JSON.stringify(items));
             saveIDB(NOTIFICACOES_KEY, items);
             if (syncCallbacks.onNotificacoes) syncCallbacks.onNotificacoes(items);
@@ -191,7 +192,7 @@ export const StorageService = {
             const localNotifs = this.getNotificacoes();
             if (localNotifs.length > 0) {
               this.saveNotificacoes(localNotifs);
-            } else if (snapshot.metadata.fromCache === false) {
+            } else {
               localStorage.setItem(NOTIFICACOES_KEY, JSON.stringify([]));
               saveIDB(NOTIFICACOES_KEY, []);
               if (syncCallbacks.onNotificacoes) syncCallbacks.onNotificacoes([]);
