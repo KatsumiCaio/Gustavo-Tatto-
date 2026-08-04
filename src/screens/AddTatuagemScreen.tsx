@@ -471,12 +471,23 @@ export const AddTatuagemScreen: React.FC = () => {
 
             <div className="p-3 overflow-y-auto divide-y divide-[#3A3A3A]/50">
               {(() => {
-                const term = clientSearchTerm.trim().toLowerCase();
+                const normalizeStr = (str: string) =>
+                  str
+                    .toLowerCase()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '');
+
+                const rawTerm = clientSearchTerm.trim();
+                const term = normalizeStr(rawTerm);
+                const digitsOnly = rawTerm.replace(/\D/g, '');
+
                 const filtered = clientes.filter(cli => {
-                  if (!term) return true;
-                  const matchNome = cli.nome.toLowerCase().includes(term);
-                  const matchTelefone = cli.telefone.toLowerCase().includes(term) || cli.telefone.replace(/\D/g, '').includes(term.replace(/\D/g, ''));
-                  const matchInsta = cli.instagram ? cli.instagram.toLowerCase().includes(term) : false;
+                  if (!rawTerm) return true;
+                  const matchNome = normalizeStr(cli.nome).includes(term);
+                  const matchTelefone =
+                    normalizeStr(cli.telefone).includes(term) ||
+                    (digitsOnly.length > 0 && cli.telefone.replace(/\D/g, '').includes(digitsOnly));
+                  const matchInsta = cli.instagram ? normalizeStr(cli.instagram).includes(term) : false;
                   return matchNome || matchTelefone || matchInsta;
                 });
 

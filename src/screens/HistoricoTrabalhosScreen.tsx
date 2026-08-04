@@ -26,29 +26,39 @@ export const HistoricoTrabalhosScreen: React.FC = () => {
     : [...tatuagens]
   ).sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
 
+  const normalizeStr = (str: string) =>
+    str
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
   // Search filter by client name, phone, or instagram
   const filteredList = list.filter(t => {
-    const term = searchTerm.trim().toLowerCase();
-    if (!term) return true;
+    const rawTerm = searchTerm.trim();
+    if (!rawTerm) return true;
+
+    const term = normalizeStr(rawTerm);
+    const digitsOnly = rawTerm.replace(/\D/g, '');
 
     // Match client name
-    const matchCliente = t.cliente.toLowerCase().includes(term);
+    const matchCliente = normalizeStr(t.cliente).includes(term);
 
     // Match phone (from tattoo or matched client record)
     const matchTelefone = t.telefone
-      ? (t.telefone.toLowerCase().includes(term) || t.telefone.replace(/\D/g, '').includes(term.replace(/\D/g, '')))
+      ? (normalizeStr(t.telefone).includes(term) ||
+         (digitsOnly.length > 0 && t.telefone.replace(/\D/g, '').includes(digitsOnly)))
       : false;
 
     // Match instagram handle from clients context
     const clientObj = clientes.find(
-      c => c.nome.toLowerCase() === t.cliente.toLowerCase() || (t.telefone && c.telefone === t.telefone)
+      c => normalizeStr(c.nome) === normalizeStr(t.cliente) || (t.telefone && c.telefone === t.telefone)
     );
     const matchInstagram = clientObj?.instagram
-      ? clientObj.instagram.toLowerCase().includes(term)
+      ? normalizeStr(clientObj.instagram).includes(term)
       : false;
 
     // Match description
-    const matchDesc = t.descricao ? t.descricao.toLowerCase().includes(term) : false;
+    const matchDesc = t.descricao ? normalizeStr(t.descricao).includes(term) : false;
 
     return matchCliente || matchTelefone || matchInstagram || matchDesc;
   });

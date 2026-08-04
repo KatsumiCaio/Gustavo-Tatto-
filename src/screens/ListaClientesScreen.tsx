@@ -14,12 +14,25 @@ export const ListaClientesScreen: React.FC = () => {
   const [editInstagram, setEditInstagram] = useState('');
   const [editObservacoes, setEditObservacoes] = useState('');
 
+  const normalizeStr = (str: string) =>
+    str
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
   const filteredClientes = clientes.filter(c => {
-    const term = searchTerm.trim().toLowerCase();
-    if (!term) return true;
-    const matchNome = c.nome.toLowerCase().includes(term);
-    const matchTelefone = c.telefone.toLowerCase().includes(term) || c.telefone.replace(/\D/g, '').includes(term.replace(/\D/g, ''));
-    const matchInstagram = c.instagram ? c.instagram.toLowerCase().includes(term) : false;
+    const rawTerm = searchTerm.trim();
+    if (!rawTerm) return true;
+
+    const term = normalizeStr(rawTerm);
+    const digitsOnly = rawTerm.replace(/\D/g, '');
+
+    const matchNome = normalizeStr(c.nome).includes(term);
+    const matchTelefone =
+      normalizeStr(c.telefone).includes(term) ||
+      (digitsOnly.length > 0 && c.telefone.replace(/\D/g, '').includes(digitsOnly));
+    const matchInstagram = c.instagram ? normalizeStr(c.instagram).includes(term) : false;
+
     return matchNome || matchTelefone || matchInstagram;
   });
 
