@@ -6,6 +6,7 @@ import { handleFirestoreError, OperationType } from '../lib/firebaseErrors';
 const TATUAGENS_KEY = 'tatuagens_data';
 const CLIENTES_KEY = 'clientes_data';
 const NOTIFICACOES_KEY = 'notificacoes_data';
+const DELETED_NOTIFS_KEY = 'deleted_notificacoes_ids';
 const INITIALIZED_KEY = 'app_initialized_v2';
 
 const DB_NAME = 'GustavoTattooDB';
@@ -73,13 +74,39 @@ function sanitizeForFirestore(obj: any): any {
   } else if (obj !== null && typeof obj === 'object') {
     const cleaned: any = {};
     for (const key of Object.keys(obj)) {
-      if (obj[key] !== undefined) {
-        cleaned[key] = sanitizeForFirestore(obj[key]);
+      const val = obj[key];
+      // Strip undefined, null, and empty strings to optimize Firestore storage space
+      if (val !== undefined && val !== null && val !== '') {
+        cleaned[key] = sanitizeForFirestore(val);
+      } else if (val === false || val === 0) {
+        cleaned[key] = val;
       }
     }
     return cleaned;
   }
   return obj;
+}
+
+function isNotificacaoOld(n: Notificacao): boolean {
+  if (!n) return false;
+  const now = Date.now();
+  const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+  const SIXTY_DAYS_MS = 60 * 24 * 60 * 60 * 1000;
+
+  const refDateStr = n.criadaEm || n.dataHoraNotificacao;
+  if (!refDateStr) return false;
+
+  const refTime = new Date(refDateStr).getTime();
+  if (isNaN(refTime)) return false;
+
+  const ageMs = now - refTime;
+  if (n.lida && ageMs > THIRTY_DAYS_MS) {
+    return true;
+  }
+  if (ageMs > SIXTY_DAYS_MS) {
+    return true;
+  }
+  return false;
 }
 
 // Callbacks for real-time Firebase syncing to React state
@@ -94,6 +121,29 @@ let syncCallbacks: SyncCallback = {};
 export const StorageService = {
   subscribeSync(callbacks: SyncCallback) {
     syncCallbacks = callbacks;
+  },
+
+  getDeletedNotificacaoIds(): string[] {
+    try {
+      const raw = localStorage.getItem(DELETED_NOTIFS_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {
+      console.error('Error reading deleted notificacoes IDs:', e);
+    }
+    return [];
+  },
+
+  addDeletedNotificacaoId(id: string): void {
+    try {
+      const ids = this.getDeletedNotificacaoIds();
+      if (!ids.includes(id)) {
+        const updated = [...ids, id];
+        localStorage.setItem(DELETED_NOTIFS_KEY, JSON.stringify(updated));
+        saveIDB(DELETED_NOTIFS_KEY, updated);
+      }
+    } catch (e) {
+      console.error('Error saving deleted notificacao ID:', e);
+    }
   },
 
   async restoreFromIDB(): Promise<void> {
@@ -112,11 +162,21 @@ export const StorageService = {
           localStorage.setItem(TATUAGENS_KEY, JSON.stringify(idbTats));
         }
       }
+
+      const idbDeleted = await getIDB(DELETED_NOTIFS_KEY);
+      if (idbDeleted && Array.isArray(idbDeleted) && idbDeleted.length > 0) {
+        const currentDeleted = this.getDeletedNotificacaoIds();
+        const mergedDeleted = Array.from(new Set([...currentDeleted, ...idbDeleted]));
+        localStorage.setItem(DELETED_NOTIFS_KEY, JSON.stringify(mergedDeleted));
+      }
+
+      const deletedSet = new Set(this.getDeletedNotificacaoIds());
       const idbNotifs = await getIDB(NOTIFICACOES_KEY);
-      if (idbNotifs && Array.isArray(idbNotifs) && idbNotifs.length > 0) {
+      if (idbNotifs && Array.isArray(idbNotifs)) {
+        const cleanIdbNotifs = idbNotifs.filter((n: Notificacao) => !deletedSet.has(n.id));
         const currentNotifs = this.getNotificacoes();
-        if (currentNotifs.length === 0) {
-          localStorage.setItem(NOTIFICACOES_KEY, JSON.stringify(idbNotifs));
+        if (currentNotifs.length === 0 && cleanIdbNotifs.length > 0) {
+          localStorage.setItem(NOTIFICACOES_KEY, JSON.stringify(cleanIdbNotifs));
         }
       }
     } catch (e) {
@@ -182,22 +242,23 @@ export const StorageService = {
         collection(db, 'notificacoes'),
         (snapshot) => {
           const items: Notificacao[] = [];
-          snapshot.forEach((docSnap) => items.push(docSnap.data() as Notificacao));
-          const isInitialized = localStorage.getItem(INITIALIZED_KEY) === 'true';
-          if (items.length > 0 || isInitialized) {
-            localStorage.setItem(NOTIFICACOES_KEY, JSON.stringify(items));
-            saveIDB(NOTIFICACOES_KEY, items);
-            if (syncCallbacks.onNotificacoes) syncCallbacks.onNotificacoes(items);
-          } else {
-            const localNotifs = this.getNotificacoes();
-            if (localNotifs.length > 0) {
-              this.saveNotificacoes(localNotifs);
-            } else {
-              localStorage.setItem(NOTIFICACOES_KEY, JSON.stringify([]));
-              saveIDB(NOTIFICACOES_KEY, []);
-              if (syncCallbacks.onNotificacoes) syncCallbacks.onNotificacoes([]);
+          const deletedSet = new Set(this.getDeletedNotificacaoIds());
+
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data() as Notificacao;
+            if (data && data.id) {
+              if (deletedSet.has(data.id) || isNotificacaoOld(data)) {
+                this.addDeletedNotificacaoId(data.id);
+                deleteDoc(doc(db, 'notificacoes', data.id)).catch(() => {});
+              } else {
+                items.push(data);
+              }
             }
-          }
+          });
+
+          localStorage.setItem(NOTIFICACOES_KEY, JSON.stringify(items));
+          saveIDB(NOTIFICACOES_KEY, items);
+          if (syncCallbacks.onNotificacoes) syncCallbacks.onNotificacoes(items);
         },
         (error) => {
           handleFirestoreError(error, OperationType.GET, 'notificacoes');
@@ -262,6 +323,12 @@ export const StorageService = {
   },
 
   async deleteSingleNotificacao(id: string): Promise<void> {
+    this.addDeletedNotificacaoId(id);
+
+    const current = this.getNotificacoes().filter(n => n.id !== id);
+    localStorage.setItem(NOTIFICACOES_KEY, JSON.stringify(current));
+    await saveIDB(NOTIFICACOES_KEY, current);
+
     try {
       deleteDoc(doc(db, 'notificacoes', id)).catch((err) => {
         handleFirestoreError(err, OperationType.DELETE, `notificacoes/${id}`);
@@ -340,7 +407,11 @@ export const StorageService = {
   getNotificacoes(): Notificacao[] {
     try {
       const data = localStorage.getItem(NOTIFICACOES_KEY);
-      if (data) return JSON.parse(data);
+      if (data) {
+        const parsed: Notificacao[] = JSON.parse(data);
+        const deletedIds = new Set(this.getDeletedNotificacaoIds());
+        return parsed.filter(n => n && n.id && !deletedIds.has(n.id) && !isNotificacaoOld(n));
+      }
     } catch (e) {
       console.error('Error reading notificacoes:', e);
     }
@@ -348,18 +419,21 @@ export const StorageService = {
   },
 
   async saveNotificacoes(notificacoes: Notificacao[]): Promise<void> {
+    const deletedSet = new Set(this.getDeletedNotificacaoIds());
+    const cleanNotifs = (notificacoes || []).filter(n => n && n.id && !deletedSet.has(n.id) && !isNotificacaoOld(n));
+
     try {
-      localStorage.setItem(NOTIFICACOES_KEY, JSON.stringify(notificacoes));
-      saveIDB(NOTIFICACOES_KEY, notificacoes);
+      localStorage.setItem(NOTIFICACOES_KEY, JSON.stringify(cleanNotifs));
+      await saveIDB(NOTIFICACOES_KEY, cleanNotifs);
     } catch (e) {
       console.error('Error saving notificacoes locally:', e);
     }
 
     // Direct Firestore sync without blocking getDocs call
     try {
-      if (notificacoes.length === 0) return;
+      if (cleanNotifs.length === 0) return;
       const batch = writeBatch(db);
-      notificacoes.forEach((n) => {
+      cleanNotifs.forEach((n) => {
         batch.set(doc(db, 'notificacoes', n.id), sanitizeForFirestore(n));
       });
       batch.commit().catch((err) => {
@@ -374,9 +448,11 @@ export const StorageService = {
     localStorage.removeItem(CLIENTES_KEY);
     localStorage.removeItem(TATUAGENS_KEY);
     localStorage.removeItem(NOTIFICACOES_KEY);
-    saveIDB(CLIENTES_KEY, []);
-    saveIDB(TATUAGENS_KEY, []);
-    saveIDB(NOTIFICACOES_KEY, []);
+    localStorage.removeItem(DELETED_NOTIFS_KEY);
+    await saveIDB(CLIENTES_KEY, []);
+    await saveIDB(TATUAGENS_KEY, []);
+    await saveIDB(NOTIFICACOES_KEY, []);
+    await saveIDB(DELETED_NOTIFS_KEY, []);
 
     try {
       const batch = writeBatch(db);

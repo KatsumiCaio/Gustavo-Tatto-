@@ -85,6 +85,7 @@ self.addEventListener('message', (event) => {
 
   if (event.data.type === 'SYNC_SCHEDULED_NOTIFICATIONS') {
     scheduledNotifs = event.data.payload || [];
+    clearUnmatchedSWTimers(scheduledNotifs);
     scheduleTimersInServiceWorker();
   } else if (event.data.type === 'SHOW_NOTIFICATION') {
     const { title, body, tag, data } = event.data.payload;
@@ -112,6 +113,18 @@ function showSWNotification(title, body, tag, data) {
 
 // Active background timers maintained inside Service Worker
 const activeSWTimers = new Map();
+
+function clearUnmatchedSWTimers(validNotifs) {
+  const validIds = new Set((validNotifs || []).map(n => n.id));
+  for (const [id, timerVal] of activeSWTimers.entries()) {
+    if (!validIds.has(id)) {
+      if (typeof timerVal === 'number') {
+        clearTimeout(timerVal);
+      }
+      activeSWTimers.delete(id);
+    }
+  }
+}
 
 function scheduleTimersInServiceWorker() {
   if (!scheduledNotifs || scheduledNotifs.length === 0) return;
