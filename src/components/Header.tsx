@@ -19,6 +19,7 @@ const titlesMap: Record<ScreenName, string> = {
   historico_trabalhos: 'Histórico de Trabalhos',
   settings: 'Configurações & Resumo',
   notificacoes: 'Aba de Notificações',
+  faturamento: 'Faturamento Mês a Mês',
 };
 
 export const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {

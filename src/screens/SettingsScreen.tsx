@@ -201,7 +201,10 @@ export const SettingsScreen: React.FC = () => {
           💰 Faturamento
         </h2>
 
-        <div className="bg-[#2D2D2D] border border-[#3A3A3A] border-l-8 border-l-[#FFB703] p-6 rounded-3xl shadow-xl flex items-center justify-between">
+        <div 
+          onClick={() => navigate('faturamento')}
+          className="bg-[#2D2D2D] border border-[#3A3A3A] border-l-8 border-l-[#FFB703] hover:border-[#FFB703] p-6 rounded-3xl shadow-xl flex items-center justify-between cursor-pointer transition-all hover:bg-[#333333]"
+        >
           <div>
             <p className="text-xs font-bold text-[#999999] uppercase tracking-wider">
               Faturamento Concluído
@@ -209,11 +212,11 @@ export const SettingsScreen: React.FC = () => {
             <p className="text-3xl font-black text-[#FFB703] mt-1">
               {formatCurrency(faturamentoConcluido)}
             </p>
-            <p className="text-xs text-[#999999] mt-1 italic">
-              Baseado em {stats.concluidas} tatuagens com status concluído
+            <p className="text-xs text-[#FF6B35] font-bold mt-2 flex items-center gap-1">
+              Ver detalhamento mês a mês →
             </p>
           </div>
-          <div className="w-16 h-16 rounded-2xl bg-[#FFB703]/10 border border-[#FFB703]/30 flex items-center justify-center text-3xl">
+          <div className="w-16 h-16 rounded-2xl bg-[#FFB703]/10 border border-[#FFB703]/30 flex items-center justify-center text-3xl shrink-0">
             💵
           </div>
         </div>

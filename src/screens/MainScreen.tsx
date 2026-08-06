@@ -47,6 +47,14 @@ export const MainScreen: React.FC = () => {
       badge: unreadNotificacoesCount > 0 ? `${unreadNotificacoesCount} novas` : undefined,
     },
     {
+      id: 'faturamento',
+      title: 'Faturamento Mês a Mês',
+      desc: 'Valores mensais, médias e histórico',
+      screen: 'faturamento' as const,
+      icon: DollarSign,
+      color: 'from-[#4CAF50] to-[#2E7D32]',
+    },
+    {
       id: 'cadastro_cliente',
       title: 'Cadastrar Cliente',
       desc: 'Adicionar novo cliente à lista',
@@ -155,7 +163,11 @@ export const MainScreen: React.FC = () => {
           </span>
         </div>
 
-        <div className="text-center p-2 border-b sm:border-b-0 sm:border-r border-[#3A3A3A]">
+        <div 
+          onClick={() => navigate('faturamento')}
+          className="text-center p-2 border-b sm:border-b-0 sm:border-r border-[#3A3A3A] cursor-pointer hover:bg-[#333333] transition-colors rounded-xl"
+          title="Ver Faturamento Mês a Mês"
+        >
           <div className="flex items-center justify-center gap-1 text-[#4CAF50] text-xs font-semibold mb-1">
             <DollarSign size={14} /> Concluídos
           </div>

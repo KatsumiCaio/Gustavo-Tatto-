@@ -10,6 +10,7 @@ import { ListaClientesScreen } from './screens/ListaClientesScreen';
 import { HistoricoTrabalhosScreen } from './screens/HistoricoTrabalhosScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { NotificacoesScreen } from './screens/NotificacoesScreen';
+import { FaturamentoScreen } from './screens/FaturamentoScreen';
 
 const ScreenRouter: React.FC = () => {
   const { currentScreen } = useAgenda();
@@ -32,6 +33,8 @@ const ScreenRouter: React.FC = () => {
         return <SettingsScreen />;
       case 'notificacoes':
         return <NotificacoesScreen />;
+      case 'faturamento':
+        return <FaturamentoScreen />;
       default:
         return <MainScreen />;
     }

@@ -106,8 +106,6 @@ export const SystemNotificationService = {
 
   // Trigger delayed notification via Service Worker (Works even if tab/app is closed right after!)
   scheduleDelayedNotification(options: DeviceNotificationOptions, delayMs: number = 5000): boolean {
-    this.playAlertEffects();
-
     if (!this.isSupported() || Notification.permission !== 'granted') {
       return false;
     }

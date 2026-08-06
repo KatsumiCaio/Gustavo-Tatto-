@@ -52,7 +52,8 @@ export type ScreenName =
   | 'lista_clientes'
   | 'historico_trabalhos'
   | 'settings'
-  | 'notificacoes';
+  | 'notificacoes'
+  | 'faturamento';
 
 export interface NavigationParams {
   tatuagemId?: string;

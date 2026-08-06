@@ -140,6 +140,7 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   };
 
   const firedNotifIds = useRef<Set<string>>(new Set());
+  const isInitialNotifCheckRef = useRef(true);
 
   useEffect(() => {
     // Synchronously load local data immediately on mount
@@ -178,10 +179,22 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       const min = String(now.getMinutes()).padStart(2, '0');
       const currentNowIso = `${yyyy}-${mm}-${dd} ${hh}:${min}`;
 
+      if (isInitialNotifCheckRef.current) {
+        // Mark all past notifications as already processed on initial app load
+        // to prevent playing sounds for old/past reminders upon opening the app
+        notificacoes.forEach(n => {
+          if (n.dataHoraNotificacao && n.dataHoraNotificacao <= currentNowIso) {
+            firedNotifIds.current.add(n.id);
+          }
+        });
+        isInitialNotifCheckRef.current = false;
+        return;
+      }
+
       notificacoes.forEach(n => {
         if (!n.dataHoraNotificacao) return;
 
-        // If notification time is reached or passed and not yet fired in system
+        // If notification time is reached or passed while app is open and not yet fired in system
         if (n.dataHoraNotificacao <= currentNowIso && !firedNotifIds.current.has(n.id)) {
           firedNotifIds.current.add(n.id);
           SystemNotificationService.sendNotification({

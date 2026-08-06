@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAgenda } from '../contexts/AgendaContext';
 import { ScreenName } from '../types';
-import { Home, Calendar, PlusCircle, Users, Bell, Settings } from 'lucide-react';
+import { Home, Calendar, PlusCircle, Users, Bell, Settings, DollarSign } from 'lucide-react';
 
 export const BottomNav: React.FC = () => {
   const { currentScreen, unreadNotificacoesCount, navigate } = useAgenda();
@@ -10,6 +10,7 @@ export const BottomNav: React.FC = () => {
     { screen: 'main', label: 'Início', icon: <Home size={20} /> },
     { screen: 'agenda', label: 'Agenda', icon: <Calendar size={20} /> },
     { screen: 'add_tatuagem', label: 'Novo', icon: <PlusCircle size={20} /> },
+    { screen: 'faturamento', label: 'Caixa', icon: <DollarSign size={20} /> },
     { screen: 'lista_clientes', label: 'Clientes', icon: <Users size={20} /> },
     { screen: 'notificacoes', label: 'Alertas', icon: <Bell size={20} />, badge: unreadNotificacoesCount },
     { screen: 'settings', label: 'Ajustes', icon: <Settings size={20} /> },
