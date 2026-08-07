@@ -1,5 +1,11 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { 
+  initializeFirestore, 
+  getFirestore, 
+  persistentLocalCache, 
+  persistentMultipleTabManager,
+  Firestore
+} from 'firebase/firestore';
 import { getAuth, signInAnonymously } from 'firebase/auth';
 import defaultConfig from '../../firebase-applet-config.json';
 
@@ -16,14 +22,30 @@ const firebaseConfig = {
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-export const db = firebaseConfig.firestoreDatabaseId
-  ? getFirestore(app, firebaseConfig.firestoreDatabaseId)
-  : getFirestore(app);
+function getOrCreateFirestore(): Firestore {
+  try {
+    const dbSettings = {
+      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+    };
+    return firebaseConfig.firestoreDatabaseId
+      ? initializeFirestore(app, dbSettings, firebaseConfig.firestoreDatabaseId)
+      : initializeFirestore(app, dbSettings);
+  } catch (e) {
+    // If initializeFirestore fails (e.g. already initialized), fallback to getFirestore
+    return firebaseConfig.firestoreDatabaseId
+      ? getFirestore(app, firebaseConfig.firestoreDatabaseId)
+      : getFirestore(app);
+  }
+}
+
+export const db = getOrCreateFirestore();
 
 export const auth = getAuth(app);
 
 // Ensure user is signed in anonymously for Firestore access
 signInAnonymously(auth).catch((err) => {
-  console.warn('Firebase anonymous auth warning:', err);
+  // Gracefully log without breaking offline usage
+  console.warn('Firebase anonymous auth info:', err?.message || err);
 });
+
 
