@@ -26,7 +26,9 @@ export const EditTatuagemModal: React.FC<EditTatuagemModalProps> = ({
   const [status, setStatus] = useState<'agendado' | 'concluído' | 'cancelado'>('agendado');
   const [observacoes, setObservacoes] = useState('');
   const [imagemModelo, setImagemModelo] = useState<string | null>(null);
-  const [imagemFinal, setImagemFinal] = useState<string | null>(null);
+  const [fotoDecalque, setFotoDecalque] = useState<string | null>(null);
+  const [fotoRecemFeita, setFotoRecemFeita] = useState<string | null>(null);
+  const [fotoCicatrizada, setFotoCicatrizada] = useState<string | null>(null);
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
 
   useEffect(() => {
@@ -40,7 +42,9 @@ export const EditTatuagemModal: React.FC<EditTatuagemModalProps> = ({
       setStatus(tatuagem.status || 'agendado');
       setObservacoes(tatuagem.observacoes || '');
       setImagemModelo(tatuagem.imagemModelo || null);
-      setImagemFinal(tatuagem.imagemFinal || null);
+      setFotoDecalque(tatuagem.fotoDecalque || null);
+      setFotoRecemFeita(tatuagem.fotoRecemFeita || tatuagem.imagemFinal || null);
+      setFotoCicatrizada(tatuagem.fotoCicatrizada || null);
     }
   }, [tatuagem]);
 
@@ -58,7 +62,10 @@ export const EditTatuagemModal: React.FC<EditTatuagemModalProps> = ({
       status,
       observacoes,
       imagemModelo: imagemModelo || undefined,
-      imagemFinal: imagemFinal || undefined,
+      fotoDecalque: fotoDecalque || undefined,
+      fotoRecemFeita: fotoRecemFeita || undefined,
+      imagemFinal: fotoRecemFeita || undefined,
+      fotoCicatrizada: fotoCicatrizada || undefined,
     });
     onClose();
   };
@@ -73,20 +80,22 @@ export const EditTatuagemModal: React.FC<EditTatuagemModalProps> = ({
     onClose();
   };
 
-  const handleImageUpload = (
+  const handleImageUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
-    type: 'modelo' | 'final'
+    type: 'modelo' | 'decalque' | 'recem' | 'cicatrizada'
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        if (type === 'modelo') setImagemModelo(reader.result);
-        if (type === 'final') setImagemFinal(reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      const { compressImage } = await import('../utils/imageCompressor');
+      const compressed = await compressImage(file, 800, 800, 0.75);
+      if (type === 'modelo') setImagemModelo(compressed);
+      if (type === 'decalque') setFotoDecalque(compressed);
+      if (type === 'recem') setFotoRecemFeita(compressed);
+      if (type === 'cicatrizada') setFotoCicatrizada(compressed);
+    } catch (err) {
+      console.error('Erro ao processar imagem:', err);
+    }
   };
 
   return (
@@ -249,64 +258,132 @@ export const EditTatuagemModal: React.FC<EditTatuagemModalProps> = ({
             />
           </div>
 
-          {/* Image uploads (Modelo / Final) */}
-          <div className="grid grid-cols-2 gap-3 pt-2">
-            <div>
-              <label className="block text-xs font-semibold text-[#999999] mb-1">
-                Imagem Modelo / Referência
-              </label>
-              {imagemModelo ? (
-                <div className="relative rounded-xl overflow-hidden border border-[#3A3A3A] h-24 bg-black">
-                  <img src={imagemModelo} alt="Modelo" className="w-full h-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => setImagemModelo(null)}
-                    className="absolute top-1 right-1 p-1 bg-red-600 rounded-full text-white"
-                  >
-                    <X size={12} />
-                  </button>
-                </div>
-              ) : (
-                <label className="flex flex-col items-center justify-center h-24 border-2 border-dashed border-[#3A3A3A] rounded-xl cursor-pointer hover:border-[#FF6B35] transition-colors text-[#999999]">
-                  <Upload size={18} className="mb-1 text-[#FF6B35]" />
-                  <span className="text-[11px] font-medium">Anexar Modelo</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={e => handleImageUpload(e, 'modelo')}
-                    className="hidden"
-                  />
+          {/* Image uploads (Referência, Decalque, Recém-Feita, Cicatrizada) */}
+          <div className="space-y-2 pt-2 border-t border-[#3A3A3A]/60">
+            <label className="block text-xs font-bold text-[#FF6B35] uppercase tracking-wider">
+              📸 Fotos do Projeto & Evolução
+            </label>
+            
+            <div className="grid grid-cols-2 gap-3">
+              {/* 1. Referência */}
+              <div>
+                <label className="block text-[11px] font-semibold text-[#999999] mb-1">
+                  🎨 Referência
                 </label>
-              )}
-            </div>
+                {imagemModelo ? (
+                  <div className="relative rounded-xl overflow-hidden border border-[#3A3A3A] h-24 bg-black">
+                    <img src={imagemModelo} alt="Referência" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setImagemModelo(null)}
+                      className="absolute top-1 right-1 p-1 bg-red-600 rounded-full text-white cursor-pointer"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center h-24 border-2 border-dashed border-[#3A3A3A] rounded-xl cursor-pointer hover:border-[#FF6B35] transition-colors text-[#999999] bg-[#1C1C1C]/40 p-2 text-center">
+                    <Upload size={16} className="mb-1 text-[#FF6B35]" />
+                    <span className="text-[10px] font-medium">Modelo</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={e => handleImageUpload(e, 'modelo')}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-[#999999] mb-1">
-                Foto do Resultado Final
-              </label>
-              {imagemFinal ? (
-                <div className="relative rounded-xl overflow-hidden border border-[#3A3A3A] h-24 bg-black">
-                  <img src={imagemFinal} alt="Final" className="w-full h-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => setImagemFinal(null)}
-                    className="absolute top-1 right-1 p-1 bg-red-600 rounded-full text-white"
-                  >
-                    <X size={12} />
-                  </button>
-                </div>
-              ) : (
-                <label className="flex flex-col items-center justify-center h-24 border-2 border-dashed border-[#3A3A3A] rounded-xl cursor-pointer hover:border-[#4CAF50] transition-colors text-[#999999]">
-                  <Upload size={18} className="mb-1 text-[#4CAF50]" />
-                  <span className="text-[11px] font-medium">Anexar Resultado</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={e => handleImageUpload(e, 'final')}
-                    className="hidden"
-                  />
+              {/* 2. Decalque */}
+              <div>
+                <label className="block text-[11px] font-semibold text-[#999999] mb-1">
+                  📐 Decalque
                 </label>
-              )}
+                {fotoDecalque ? (
+                  <div className="relative rounded-xl overflow-hidden border border-[#3A3A3A] h-24 bg-black">
+                    <img src={fotoDecalque} alt="Decalque" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setFotoDecalque(null)}
+                      className="absolute top-1 right-1 p-1 bg-red-600 rounded-full text-white cursor-pointer"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center h-24 border-2 border-dashed border-[#3A3A3A] rounded-xl cursor-pointer hover:border-[#FFB703] transition-colors text-[#999999] bg-[#1C1C1C]/40 p-2 text-center">
+                    <Upload size={16} className="mb-1 text-[#FFB703]" />
+                    <span className="text-[10px] font-medium">Decalque</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={e => handleImageUpload(e, 'decalque')}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+
+              {/* 3. Recém-Feita */}
+              <div>
+                <label className="block text-[11px] font-semibold text-[#999999] mb-1">
+                  💉 Recém-Feita
+                </label>
+                {fotoRecemFeita ? (
+                  <div className="relative rounded-xl overflow-hidden border border-[#3A3A3A] h-24 bg-black">
+                    <img src={fotoRecemFeita} alt="Recém-Feita" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setFotoRecemFeita(null)}
+                      className="absolute top-1 right-1 p-1 bg-red-600 rounded-full text-white cursor-pointer"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center h-24 border-2 border-dashed border-[#3A3A3A] rounded-xl cursor-pointer hover:border-[#4CAF50] transition-colors text-[#999999] bg-[#1C1C1C]/40 p-2 text-center">
+                    <Upload size={16} className="mb-1 text-[#4CAF50]" />
+                    <span className="text-[10px] font-medium">Recém-Feita</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={e => handleImageUpload(e, 'recem')}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+
+              {/* 4. Cicatrizada */}
+              <div>
+                <label className="block text-[11px] font-semibold text-[#999999] mb-1">
+                  ✨ Cicatrizada
+                </label>
+                {fotoCicatrizada ? (
+                  <div className="relative rounded-xl overflow-hidden border border-[#3A3A3A] h-24 bg-black">
+                    <img src={fotoCicatrizada} alt="Cicatrizada" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setFotoCicatrizada(null)}
+                      className="absolute top-1 right-1 p-1 bg-red-600 rounded-full text-white cursor-pointer"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center h-24 border-2 border-dashed border-[#3A3A3A] rounded-xl cursor-pointer hover:border-[#3a86ff] transition-colors text-[#999999] bg-[#1C1C1C]/40 p-2 text-center">
+                    <Upload size={16} className="mb-1 text-[#3a86ff]" />
+                    <span className="text-[10px] font-medium">Cicatrizada</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={e => handleImageUpload(e, 'cicatrizada')}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
             </div>
           </div>
 

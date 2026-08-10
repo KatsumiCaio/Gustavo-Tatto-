@@ -7,7 +7,7 @@ import { addDays, subDays, format, isSameDay, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface ViewSelectorProps {
-  onPressImage?: (tatuagem: Tatuagem) => void;
+  onPressImage?: (tatuagem: Tatuagem, initialIndex?: number) => void;
   onEdit?: (tatuagem: Tatuagem) => void;
   onDelete?: (tatuagem: Tatuagem) => void;
 }

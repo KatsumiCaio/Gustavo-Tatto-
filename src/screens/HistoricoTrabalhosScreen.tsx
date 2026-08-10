@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAgenda } from '../contexts/AgendaContext';
 import { TatuagemCard } from '../components/TatuagemCard';
 import { EditTatuagemModal } from '../components/EditTatuagemModal';
-import { ImageViewerModal } from '../components/ImageViewerModal';
+import { ImageViewerModal, ImageItem } from '../components/ImageViewerModal';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { Tatuagem } from '../types';
 import { History, FileX, ArrowLeft, Search, X } from 'lucide-react';
@@ -17,7 +17,8 @@ export const HistoricoTrabalhosScreen: React.FC = () => {
 
   const [deletingTatuagem, setDeletingTatuagem] = useState<Tatuagem | null>(null);
 
-  const [viewerImages, setViewerImages] = useState<string[]>([]);
+  const [viewerImages, setViewerImages] = useState<ImageItem[]>([]);
+  const [viewerInitialIndex, setViewerInitialIndex] = useState(0);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
 
   // Filter tattoos for client if provided, sorted by date descending
@@ -68,10 +69,18 @@ export const HistoricoTrabalhosScreen: React.FC = () => {
     setIsEditModalOpen(true);
   };
 
-  const handlePressImage = (tatuagem: Tatuagem) => {
-    const imgs = [tatuagem.imagemModelo, tatuagem.imagemFinal].filter(Boolean) as string[];
-    if (imgs.length > 0) {
-      setViewerImages(imgs);
+  const handlePressImage = (tatuagem: Tatuagem, initialIndex = 0) => {
+    const list: ImageItem[] = [];
+    if (tatuagem.imagemModelo) list.push({ url: tatuagem.imagemModelo, label: '🎨 Referência / Modelo' });
+    if (tatuagem.fotoDecalque) list.push({ url: tatuagem.fotoDecalque, label: '📐 Decalque / Stencil' });
+    if (tatuagem.fotoRecemFeita || tatuagem.imagemFinal) {
+      list.push({ url: (tatuagem.fotoRecemFeita || tatuagem.imagemFinal)!, label: '💉 Tattoo Recém-Feita' });
+    }
+    if (tatuagem.fotoCicatrizada) list.push({ url: tatuagem.fotoCicatrizada, label: '✨ Tattoo Cicatrizada' });
+
+    if (list.length > 0) {
+      setViewerImages(list);
+      setViewerInitialIndex(initialIndex);
       setIsViewerOpen(true);
     }
   };
@@ -181,6 +190,7 @@ export const HistoricoTrabalhosScreen: React.FC = () => {
       <ImageViewerModal
         visible={isViewerOpen}
         images={viewerImages}
+        initialIndex={viewerInitialIndex}
         onClose={() => {
           setIsViewerOpen(false);
           setViewerImages([]);

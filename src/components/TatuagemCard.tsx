@@ -5,7 +5,7 @@ import { Clock, MapPin, DollarSign, Phone, Edit2, Trash2, CheckCircle2, XCircle,
 
 interface TatuagemCardProps {
   tatuagem: Tatuagem;
-  onPressImage?: (tatuagem: Tatuagem) => void;
+  onPressImage?: (tatuagem: Tatuagem, initialIndex?: number) => void;
   onEdit?: (tatuagem: Tatuagem) => void;
   onDelete?: (tatuagem: Tatuagem) => void;
   onStatusChange?: (id: string, newStatus: 'agendado' | 'concluído' | 'cancelado') => void;
@@ -130,7 +130,7 @@ export const TatuagemCard: React.FC<TatuagemCardProps> = ({
 
       {/* Value, Images Preview & Quick Reminder */}
       <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-1 bg-[#1C1C1C] px-3 py-1.5 rounded-xl border border-[#3A3A3A]">
             <DollarSign size={14} className="text-[#FFB703]" />
             <span className="text-sm font-bold text-[#FFB703]">
@@ -138,16 +138,41 @@ export const TatuagemCard: React.FC<TatuagemCardProps> = ({
             </span>
           </div>
 
-          {/* Thumbnail preview button */}
-          {(tatuagem.imagemModelo || tatuagem.imagemFinal) && (
-            <button
-              onClick={() => onPressImage && onPressImage(tatuagem)}
-              className="flex items-center gap-1.5 text-xs text-[#FF6B35] bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 border border-[#FF6B35]/30 px-3 py-1.5 rounded-xl font-medium transition-colors"
-            >
-              <ImageIcon size={14} />
-              <span>Ver Imagem</span>
-            </button>
-          )}
+          {/* Photo stage chips */}
+          {(() => {
+            const photos: { url: string; label: string; color: string }[] = [];
+            if (tatuagem.imagemModelo) {
+              photos.push({ url: tatuagem.imagemModelo, label: '🎨 Modelo', color: 'border-[#FF6B35]/40 text-[#FF6B35] bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20' });
+            }
+            if (tatuagem.fotoDecalque) {
+              photos.push({ url: tatuagem.fotoDecalque, label: '📐 Decalque', color: 'border-[#FFB703]/40 text-[#FFB703] bg-[#FFB703]/10 hover:bg-[#FFB703]/20' });
+            }
+            if (tatuagem.fotoRecemFeita || tatuagem.imagemFinal) {
+              photos.push({ url: (tatuagem.fotoRecemFeita || tatuagem.imagemFinal)!, label: '💉 Tattoo', color: 'border-[#4CAF50]/40 text-[#4CAF50] bg-[#4CAF50]/10 hover:bg-[#4CAF50]/20' });
+            }
+            if (tatuagem.fotoCicatrizada) {
+              photos.push({ url: tatuagem.fotoCicatrizada, label: '✨ Cicatrizada', color: 'border-[#3a86ff]/40 text-[#3a86ff] bg-[#3a86ff]/10 hover:bg-[#3a86ff]/20' });
+            }
+
+            if (photos.length === 0) return null;
+
+            return (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {photos.map((item, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => onPressImage && onPressImage(tatuagem, idx)}
+                    className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-xl font-bold border transition-colors cursor-pointer ${item.color}`}
+                    title={`Ver ${item.label}`}
+                  >
+                    <ImageIcon size={12} />
+                    <span>{item.label}</span>
+                  </button>
+                ))}
+              </div>
+            );
+          })()}
         </div>
 
         {/* WhatsApp Reminder Button */}

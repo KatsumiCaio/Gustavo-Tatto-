@@ -32,8 +32,11 @@ export interface Tatuagem {
   status: 'agendado' | 'concluído' | 'cancelado';
   telefone?: string;
   observacoes?: string;
-  imagemModelo?: string; // base64 or URL
-  imagemFinal?: string;  // base64 or URL
+  imagemModelo?: string; // base64 or URL (Referência / Modelo)
+  imagemFinal?: string;  // base64 or URL (Recém-Feita)
+  fotoDecalque?: string; // base64 or URL (Decalque / Stencil)
+  fotoRecemFeita?: string; // base64 or URL (Tattoo Recém-Feita)
+  fotoCicatrizada?: string; // base64 or URL (Tattoo Cicatrizada)
 
   // Notification fields
   notificacaoAtivar?: boolean;
