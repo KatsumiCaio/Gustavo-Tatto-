@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAgenda } from '../contexts/AgendaContext';
 import { Cliente } from '../types';
-import { compressImage } from '../utils/imageCompressor';
-import { User, UserPlus, Pencil, MapPin, DollarSign, Calendar, Clock, MessageSquare, Camera, X, CheckCircle2, Sparkles, Search, Instagram, Phone, Bell } from 'lucide-react';
+import { User, UserPlus, Pencil, MapPin, DollarSign, Calendar, Clock, MessageSquare, X, CheckCircle2, Sparkles, Search, Instagram, Phone, Bell } from 'lucide-react';
 
 export const AddTatuagemScreen: React.FC = () => {
   const { clientes, addTatuagem, updateTatuagem, tatuagens, navParams, navigate, permissaoNotificacaoState, solicitarPermissaoNotificacaoSistema } = useAgenda();
@@ -21,10 +20,6 @@ export const AddTatuagemScreen: React.FC = () => {
   const [local, setLocal] = useState('');
   const [valor, setValor] = useState('');
   const [observacoes, setObservacoes] = useState('');
-  const [imagemModelo, setImagemModelo] = useState<string | null>(null);
-  const [fotoDecalque, setFotoDecalque] = useState<string | null>(null);
-  const [fotoRecemFeita, setFotoRecemFeita] = useState<string | null>(null);
-  const [fotoCicatrizada, setFotoCicatrizada] = useState<string | null>(null);
 
   // Notification state
   const [notificacaoAtivar, setNotificacaoAtivar] = useState(true);
@@ -48,10 +43,6 @@ export const AddTatuagemScreen: React.FC = () => {
         setLocal(existing.local || '');
         setValor(existing.valor ? String(existing.valor) : '');
         setObservacoes(existing.observacoes || '');
-        setImagemModelo(existing.imagemModelo || null);
-        setFotoDecalque(existing.fotoDecalque || null);
-        setFotoRecemFeita(existing.fotoRecemFeita || existing.imagemFinal || null);
-        setFotoCicatrizada(existing.fotoCicatrizada || null);
 
         setNotificacaoAtivar(existing.notificacaoAtivar !== false);
         setNotificacaoOpcao(existing.notificacaoOpcao || '1hora');
@@ -60,20 +51,6 @@ export const AddTatuagemScreen: React.FC = () => {
       }
     }
   }, [isEditing, editingId, tatuagens, clientes]);
-
-  const handlePhotoUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-    setter: (val: string | null) => void
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      const compressed = await compressImage(file, 800, 800, 0.75);
-      setter(compressed);
-    } catch (err) {
-      console.error('Erro ao comprimir imagem:', err);
-    }
-  };
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,11 +79,6 @@ export const AddTatuagemScreen: React.FC = () => {
       status: (isEditing ? (tatuagens.find(t => t.id === editingId)?.status || 'agendado') : 'agendado') as any,
       telefone: selectedCliente!.telefone || undefined,
       observacoes: observacoes.trim() || undefined,
-      imagemModelo: imagemModelo || undefined,
-      fotoDecalque: fotoDecalque || undefined,
-      fotoRecemFeita: fotoRecemFeita || undefined,
-      imagemFinal: fotoRecemFeita || undefined,
-      fotoCicatrizada: fotoCicatrizada || undefined,
 
       notificacaoAtivar,
       notificacaoOpcao,
@@ -130,10 +102,6 @@ export const AddTatuagemScreen: React.FC = () => {
       setLocal('');
       setValor('');
       setObservacoes('');
-      setImagemModelo(null);
-      setFotoDecalque(null);
-      setFotoRecemFeita(null);
-      setFotoCicatrizada(null);
     }
 
     setTimeout(() => {
@@ -217,150 +185,6 @@ export const AddTatuagemScreen: React.FC = () => {
                 />
               </div>
               {errors.descricao && <p className="text-xs text-[#E63946] mt-1">{errors.descricao}</p>}
-            </div>
-
-            {/* Project Photos Grid (Referência, Decalque, Recém-Feita, Cicatrizada) */}
-            <div className="space-y-2 border-t border-[#3A3A3A] pt-4">
-              <div className="flex items-center justify-between">
-                <label className="block text-xs font-bold text-[#FF6B35] uppercase tracking-wider flex items-center gap-1.5">
-                  <Camera size={14} /> Fotos do Projeto & Evolução
-                </label>
-                <span className="text-[11px] text-[#999999]">Anexe fotos para o histórico visual do cliente</span>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
-                {/* 1. Referência / Modelo */}
-                <div className="flex flex-col gap-1">
-                  <span className="text-[11px] font-bold text-[#F5F5F5] flex items-center gap-1">
-                    🎨 Referência
-                  </span>
-                  {imagemModelo ? (
-                    <div className="relative rounded-2xl overflow-hidden border border-[#3A3A3A] h-28 bg-black group">
-                      <img src={imagemModelo} alt="Referência" className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => setImagemModelo(null)}
-                        className="absolute top-1.5 right-1.5 p-1 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg transition-colors cursor-pointer"
-                        title="Remover foto"
-                      >
-                        <X size={13} />
-                      </button>
-                    </div>
-                  ) : (
-                    <label className="flex flex-col items-center justify-center h-28 border-2 border-dashed border-[#3A3A3A] hover:border-[#FF6B35] rounded-2xl cursor-pointer bg-[#1C1C1C]/60 transition-colors p-2 text-center group">
-                      <Camera size={18} className="text-[#999999] group-hover:text-[#FF6B35] mb-1 transition-colors" />
-                      <span className="text-[10px] font-semibold text-[#888888] group-hover:text-[#F5F5F5] leading-tight">
-                        Anexar Modelo
-                      </span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={e => handlePhotoUpload(e, setImagemModelo)}
-                        className="hidden"
-                      />
-                    </label>
-                  )}
-                </div>
-
-                {/* 2. Decalque / Stencil */}
-                <div className="flex flex-col gap-1">
-                  <span className="text-[11px] font-bold text-[#F5F5F5] flex items-center gap-1">
-                    📐 Decalque
-                  </span>
-                  {fotoDecalque ? (
-                    <div className="relative rounded-2xl overflow-hidden border border-[#3A3A3A] h-28 bg-black group">
-                      <img src={fotoDecalque} alt="Decalque" className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => setFotoDecalque(null)}
-                        className="absolute top-1.5 right-1.5 p-1 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg transition-colors cursor-pointer"
-                        title="Remover foto"
-                      >
-                        <X size={13} />
-                      </button>
-                    </div>
-                  ) : (
-                    <label className="flex flex-col items-center justify-center h-28 border-2 border-dashed border-[#3A3A3A] hover:border-[#FFB703] rounded-2xl cursor-pointer bg-[#1C1C1C]/60 transition-colors p-2 text-center group">
-                      <Camera size={18} className="text-[#999999] group-hover:text-[#FFB703] mb-1 transition-colors" />
-                      <span className="text-[10px] font-semibold text-[#888888] group-hover:text-[#F5F5F5] leading-tight">
-                        Anexar Decalque
-                      </span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={e => handlePhotoUpload(e, setFotoDecalque)}
-                        className="hidden"
-                      />
-                    </label>
-                  )}
-                </div>
-
-                {/* 3. Tattoo Recém-Feita */}
-                <div className="flex flex-col gap-1">
-                  <span className="text-[11px] font-bold text-[#F5F5F5] flex items-center gap-1">
-                    💉 Recém-Feita
-                  </span>
-                  {fotoRecemFeita ? (
-                    <div className="relative rounded-2xl overflow-hidden border border-[#3A3A3A] h-28 bg-black group">
-                      <img src={fotoRecemFeita} alt="Recém-Feita" className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => setFotoRecemFeita(null)}
-                        className="absolute top-1.5 right-1.5 p-1 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg transition-colors cursor-pointer"
-                        title="Remover foto"
-                      >
-                        <X size={13} />
-                      </button>
-                    </div>
-                  ) : (
-                    <label className="flex flex-col items-center justify-center h-28 border-2 border-dashed border-[#3A3A3A] hover:border-[#4CAF50] rounded-2xl cursor-pointer bg-[#1C1C1C]/60 transition-colors p-2 text-center group">
-                      <Camera size={18} className="text-[#999999] group-hover:text-[#4CAF50] mb-1 transition-colors" />
-                      <span className="text-[10px] font-semibold text-[#888888] group-hover:text-[#F5F5F5] leading-tight">
-                        Anexar Finalizada
-                      </span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={e => handlePhotoUpload(e, setFotoRecemFeita)}
-                        className="hidden"
-                      />
-                    </label>
-                  )}
-                </div>
-
-                {/* 4. Tattoo Cicatrizada */}
-                <div className="flex flex-col gap-1">
-                  <span className="text-[11px] font-bold text-[#F5F5F5] flex items-center gap-1">
-                    ✨ Cicatrizada
-                  </span>
-                  {fotoCicatrizada ? (
-                    <div className="relative rounded-2xl overflow-hidden border border-[#3A3A3A] h-28 bg-black group">
-                      <img src={fotoCicatrizada} alt="Cicatrizada" className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => setFotoCicatrizada(null)}
-                        className="absolute top-1.5 right-1.5 p-1 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg transition-colors cursor-pointer"
-                        title="Remover foto"
-                      >
-                        <X size={13} />
-                      </button>
-                    </div>
-                  ) : (
-                    <label className="flex flex-col items-center justify-center h-28 border-2 border-dashed border-[#3A3A3A] hover:border-[#3a86ff] rounded-2xl cursor-pointer bg-[#1C1C1C]/60 transition-colors p-2 text-center group">
-                      <Camera size={18} className="text-[#999999] group-hover:text-[#3a86ff] mb-1 transition-colors" />
-                      <span className="text-[10px] font-semibold text-[#888888] group-hover:text-[#F5F5F5] leading-tight">
-                        Anexar Cicatrizada
-                      </span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={e => handlePhotoUpload(e, setFotoCicatrizada)}
-                        className="hidden"
-                      />
-                    </label>
-                  )}
-                </div>
-              </div>
             </div>
 
             {/* Local no Corpo & Valor */}

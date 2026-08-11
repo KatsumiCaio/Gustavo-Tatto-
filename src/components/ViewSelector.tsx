@@ -7,13 +7,11 @@ import { addDays, subDays, format, isSameDay, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface ViewSelectorProps {
-  onPressImage?: (tatuagem: Tatuagem, initialIndex?: number) => void;
   onEdit?: (tatuagem: Tatuagem) => void;
   onDelete?: (tatuagem: Tatuagem) => void;
 }
 
 export const ViewSelector: React.FC<ViewSelectorProps> = ({
-  onPressImage,
   onEdit,
   onDelete,
 }) => {
@@ -368,7 +366,6 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({
               <TatuagemCard
                 key={tatuagem.id}
                 tatuagem={tatuagem}
-                onPressImage={onPressImage}
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onStatusChange={handleStatusChange}
