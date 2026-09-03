@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useAgenda } from '../contexts/AgendaContext';
+import { formatValor, maskNomeCliente } from '../utils/privacy';
 import { Tatuagem } from '../types';
 import {
   DollarSign,
@@ -27,7 +28,7 @@ const MONTH_NAMES = [
 ];
 
 export const FaturamentoScreen: React.FC = () => {
-  const { tatuagens, navigate } = useAgenda();
+  const { tatuagens, navigate, modoPrivacidade } = useAgenda();
 
   // Default to current year and month YYYY-MM
   const today = new Date();
@@ -227,7 +228,7 @@ export const FaturamentoScreen: React.FC = () => {
             </div>
           </div>
           <p className="text-2xl font-black text-[#4CAF50] mt-2">
-            {formatCurrency(monthStats.concluido)}
+            {formatValor(monthStats.concluido, modoPrivacidade)}
           </p>
           <p className="text-[11px] text-[#999999] mt-1 font-medium">
             {monthStats.countConcluido} {monthStats.countConcluido === 1 ? 'trabalho realizado' : 'trabalhos realizados'}
@@ -243,7 +244,7 @@ export const FaturamentoScreen: React.FC = () => {
             </div>
           </div>
           <p className="text-2xl font-black text-[#FFB703] mt-2">
-            {formatCurrency(monthStats.agendado)}
+            {formatValor(monthStats.agendado, modoPrivacidade)}
           </p>
           <p className="text-[11px] text-[#999999] mt-1 font-medium">
             {monthStats.countAgendado} {monthStats.countAgendado === 1 ? 'agendamento pendente' : 'agendamentos pendentes'}
@@ -259,7 +260,7 @@ export const FaturamentoScreen: React.FC = () => {
             </div>
           </div>
           <p className="text-2xl font-black text-[#F5F5F5] mt-2">
-            {formatCurrency(monthStats.totalEstimado)}
+            {formatValor(monthStats.totalEstimado, modoPrivacidade)}
           </p>
           <p className="text-[11px] text-[#999999] mt-1 font-medium">
             Concluídos + Agendados
@@ -421,7 +422,7 @@ export const FaturamentoScreen: React.FC = () => {
 
                       <div className="min-w-0">
                         <p className="font-bold text-[#F5F5F5] text-sm group-hover:text-[#FF6B35] transition-colors truncate">
-                          {tat.cliente}
+                          {maskNomeCliente(tat.cliente, modoPrivacidade)}
                         </p>
                         <p className="text-xs text-[#999999] truncate">
                           {tat.descricao || 'Tatuagem'}
@@ -432,7 +433,7 @@ export const FaturamentoScreen: React.FC = () => {
                     <div className="flex items-center gap-3 shrink-0">
                       <div className="text-right">
                         <span className="block font-black text-[#F5F5F5] text-sm sm:text-base">
-                          {formatCurrency(tat.valor || 0)}
+                          {formatValor(tat.valor || 0, modoPrivacidade)}
                         </span>
                         <span className={`text-[10px] font-black px-2 py-0.5 rounded-full inline-block uppercase tracking-wider ${
                           tat.status === 'concluído'

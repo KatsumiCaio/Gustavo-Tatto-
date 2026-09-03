@@ -73,6 +73,8 @@ interface AgendaContextType {
   navParams: NavigationParams;
   theme: 'dark' | 'light';
   toggleTheme: () => void;
+  modoPrivacidade: boolean;
+  toggleModoPrivacidade: () => void;
   permissaoNotificacaoState: 'granted' | 'denied' | 'default';
   solicitarPermissaoNotificacaoSistema: () => Promise<boolean>;
   dispararNotificacaoTeste: () => boolean;
@@ -137,6 +139,26 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
+  const [modoPrivacidade, setModoPrivacidade] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('app_modo_privacidade') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('app_modo_privacidade', String(modoPrivacidade));
+    } catch (e) {
+      // ignore
+    }
+  }, [modoPrivacidade]);
+
+  const toggleModoPrivacidade = () => {
+    setModoPrivacidade((prev) => !prev);
   };
 
   const firedNotifIds = useRef<Set<string>>(new Set());
@@ -496,6 +518,8 @@ export const AgendaProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         navParams,
         theme,
         toggleTheme,
+        modoPrivacidade,
+        toggleModoPrivacidade,
         permissaoNotificacaoState,
         solicitarPermissaoNotificacaoSistema,
         dispararNotificacaoTeste,
@@ -532,6 +556,8 @@ const dummyContextFallback: AgendaContextType = {
   navParams: {},
   theme: 'dark',
   toggleTheme: () => {},
+  modoPrivacidade: false,
+  toggleModoPrivacidade: () => {},
   permissaoNotificacaoState: 'default',
   solicitarPermissaoNotificacaoSistema: async () => false,
   dispararNotificacaoTeste: () => false,

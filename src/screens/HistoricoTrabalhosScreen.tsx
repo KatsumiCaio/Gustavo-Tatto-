@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAgenda } from '../contexts/AgendaContext';
+import { maskNomeCliente } from '../utils/privacy';
 import { TatuagemCard } from '../components/TatuagemCard';
 import { EditTatuagemModal } from '../components/EditTatuagemModal';
 import { ConfirmModal } from '../components/ConfirmModal';
@@ -7,7 +8,7 @@ import { Tatuagem } from '../types';
 import { History, FileX, ArrowLeft, Search, X } from 'lucide-react';
 
 export const HistoricoTrabalhosScreen: React.FC = () => {
-  const { navParams, tatuagens, clientes, deleteTatuagem, updateTatuagem, goBack } = useAgenda();
+  const { navParams, tatuagens, clientes, deleteTatuagem, updateTatuagem, goBack, modoPrivacidade } = useAgenda();
   const clienteNome = navParams.clienteNome;
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -85,7 +86,7 @@ export const HistoricoTrabalhosScreen: React.FC = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-[#2D2D2D] border border-[#3A3A3A] p-5 rounded-3xl shadow-xl">
         <div>
           <h2 className="text-2xl font-bold text-[#F5F5F5]">
-            {clienteNome ? `Histórico: ${clienteNome}` : 'Histórico Geral de Trabalhos'}
+            {clienteNome ? `Histórico: ${maskNomeCliente(clienteNome, modoPrivacidade)}` : 'Histórico Geral de Trabalhos'}
           </h2>
           <p className="text-xs text-[#999999] mt-0.5">
             {filteredList.length} {filteredList.length === 1 ? 'trabalho encontrado' : 'trabalhos encontrados'}

@@ -1,7 +1,9 @@
 import React from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AgendaProvider, useAgenda } from './contexts/AgendaContext';
 import { Header } from './components/Header';
 import { BottomNav } from './components/BottomNav';
+import { LoginScreen } from './screens/LoginScreen';
 import { MainScreen } from './screens/MainScreen';
 import { AgendaScreen } from './screens/AgendaScreen';
 import { AddTatuagemScreen } from './screens/AddTatuagemScreen';
@@ -51,6 +53,53 @@ const ScreenRouter: React.FC = () => {
   );
 };
 
+const AuthenticatedApp: React.FC = () => {
+  const { isAuthenticated, isLoading } = useAuth();
+  const [isTabHidden, setIsTabHidden] = React.useState(false);
+
+  React.useEffect(() => {
+    const handleVisibilityChange = () => {
+      setIsTabHidden(document.hidden);
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#141414] text-[#F5F5F5] flex flex-col items-center justify-center p-4">
+        <div className="w-10 h-10 border-3 border-[#FF6B35]/30 border-t-[#FF6B35] rounded-full animate-spin mb-3" />
+        <p className="text-xs text-[#999999] font-medium tracking-wide">Carregando painel do estúdio...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginScreen />;
+  }
+
+  return (
+    <AgendaProvider>
+      <div className="relative">
+        {/* Anti-screenshot & app switcher privacy curtain */}
+        {isTabHidden && (
+          <div className="fixed inset-0 z-[9999] bg-[#141414]/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center select-none pointer-events-none">
+            <div className="w-16 h-16 rounded-3xl bg-[#222222] border border-[#FF6B35]/40 text-[#FF6B35] flex items-center justify-center mb-3 shadow-2xl">
+              <span className="text-2xl font-black">GT</span>
+            </div>
+            <p className="text-sm font-bold text-[#F5F5F5]">Gustavo Tattoo Studio</p>
+            <p className="text-xs text-[#999999] mt-1">Tela oculta para proteção de dados confidenciais</p>
+          </div>
+        )}
+        <ScreenRouter />
+      </div>
+    </AgendaProvider>
+  );
+};
+
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
   constructor(props: { children: React.ReactNode }) {
     super(props);
@@ -97,9 +146,10 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
 export default function App() {
   return (
     <ErrorBoundary>
-      <AgendaProvider>
-        <ScreenRouter />
-      </AgendaProvider>
+      <AuthProvider>
+        <AuthenticatedApp />
+      </AuthProvider>
     </ErrorBoundary>
   );
 }
+

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Tatuagem } from '../types';
 import { useAgenda } from '../contexts/AgendaContext';
+import { formatValor, maskNomeCliente, maskTelefone, maskObservacoes } from '../utils/privacy';
 import { Clock, MapPin, DollarSign, Phone, Edit2, Trash2, CheckCircle2, XCircle, AlertCircle, MessageSquare } from 'lucide-react';
 
 interface TatuagemCardProps {
@@ -16,10 +17,7 @@ export const TatuagemCard: React.FC<TatuagemCardProps> = ({
   onDelete,
   onStatusChange,
 }) => {
-  const { navigate } = useAgenda();
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
-  };
+  const { modoPrivacidade } = useAgenda();
 
   const formatDateDisplay = (dateStr: string) => {
     if (!dateStr) return '';
@@ -77,7 +75,7 @@ export const TatuagemCard: React.FC<TatuagemCardProps> = ({
       <div className="flex items-start justify-between gap-2 border-b border-[#3A3A3A] pb-3">
         <div>
           <h3 className="text-base sm:text-lg font-bold text-[#F5F5F5] leading-snug">
-            {tatuagem.cliente}
+            {maskNomeCliente(tatuagem.cliente, modoPrivacidade)}
           </h3>
           <p className="text-xs text-[#999999] flex items-center gap-1.5 mt-0.5">
             <Clock size={13} className="text-[#FF6B35]" />
@@ -109,7 +107,7 @@ export const TatuagemCard: React.FC<TatuagemCardProps> = ({
                 className="flex items-center gap-1 text-[#FF6B35] hover:underline"
               >
                 <Phone size={12} />
-                <span>{tatuagem.telefone}</span>
+                <span>{maskTelefone(tatuagem.telefone, modoPrivacidade)}</span>
               </a>
               <a
                 href={`https://wa.me/${tatuagem.telefone.replace(/\D/g, '').length === 11 || tatuagem.telefone.replace(/\D/g, '').length === 10 ? '55' + tatuagem.telefone.replace(/\D/g, '') : tatuagem.telefone.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá ${tatuagem.cliente}! Sobre o seu agendamento de tatuagem para o dia ${formatDateDisplay(tatuagem.data)} (${formatTimeRange()})...`)}`}
@@ -132,7 +130,7 @@ export const TatuagemCard: React.FC<TatuagemCardProps> = ({
           <div className="flex items-center gap-1 bg-[#1C1C1C] px-3 py-1.5 rounded-xl border border-[#3A3A3A]">
             <DollarSign size={14} className="text-[#FFB703]" />
             <span className="text-sm font-bold text-[#FFB703]">
-              {formatCurrency(tatuagem.valor)}
+              {formatValor(tatuagem.valor, modoPrivacidade)}
             </span>
           </div>
         </div>
@@ -157,7 +155,7 @@ export const TatuagemCard: React.FC<TatuagemCardProps> = ({
       {/* Observações */}
       {tatuagem.observacoes && (
         <p className="text-xs text-[#999999] bg-[#1C1C1C]/50 p-2.5 rounded-xl border border-[#3A3A3A]/50 italic">
-          "{tatuagem.observacoes}"
+          "{maskObservacoes(tatuagem.observacoes, modoPrivacidade)}"
         </p>
       )}
 

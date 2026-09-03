@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useAgenda } from '../contexts/AgendaContext';
+import { maskNomeCliente, maskTelefone, maskInstagram, maskObservacoes } from '../utils/privacy';
 import { Search, UserPlus, ChevronRight, Phone, Instagram, History, Edit2, Trash2, X, Save, MessageSquare } from 'lucide-react';
 import { Cliente } from '../types';
 import { ConfirmModal } from '../components/ConfirmModal';
 
 export const ListaClientesScreen: React.FC = () => {
-  const { clientes, tatuagens, navigate, updateCliente, deleteCliente } = useAgenda();
+  const { clientes, tatuagens, navigate, updateCliente, deleteCliente, modoPrivacidade } = useAgenda();
   const [searchTerm, setSearchTerm] = useState('');
   const [editingCliente, setEditingCliente] = useState<Cliente | null>(null);
   const [deletingCliente, setDeletingCliente] = useState<Cliente | null>(null);
@@ -134,26 +135,26 @@ export const ListaClientesScreen: React.FC = () => {
               >
                 <div className="flex items-start sm:items-center gap-3.5">
                   <div className="w-12 h-12 rounded-2xl bg-[#1C1C1C] border border-[#3A3A3A] flex items-center justify-center text-[#FF6B35] font-bold text-lg group-hover:scale-105 transition-transform flex-shrink-0">
-                    {cliente.nome.charAt(0).toUpperCase()}
+                    {modoPrivacidade ? '?' : cliente.nome.charAt(0).toUpperCase()}
                   </div>
 
                   <div>
                     <h3 className="text-base font-bold text-[#F5F5F5] group-hover:text-[#FF6B35] transition-colors">
-                      {cliente.nome}
+                      {maskNomeCliente(cliente.nome, modoPrivacidade)}
                     </h3>
                     <div className="flex flex-wrap items-center gap-3 text-xs text-[#999999] mt-1">
                       <span className="flex items-center gap-1">
-                        <Phone size={12} /> {cliente.telefone}
+                        <Phone size={12} /> {maskTelefone(cliente.telefone, modoPrivacidade)}
                       </span>
                       {cliente.instagram && (
                         <span className="flex items-center gap-1 text-[#FFB703]">
-                          <Instagram size={12} /> {cliente.instagram}
+                          <Instagram size={12} /> {maskInstagram(cliente.instagram, modoPrivacidade)}
                         </span>
                       )}
                     </div>
                     {cliente.observacoes && (
                       <p className="text-xs text-[#888888] mt-1 line-clamp-1 italic">
-                        "{cliente.observacoes}"
+                        "{maskObservacoes(cliente.observacoes, modoPrivacidade)}"
                       </p>
                     )}
                   </div>

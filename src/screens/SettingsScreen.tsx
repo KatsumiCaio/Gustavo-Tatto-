@@ -1,15 +1,21 @@
 import React, { useState } from 'react';
 import { useAgenda } from '../contexts/AgendaContext';
+import { useAuth } from '../contexts/AuthContext';
 import { StorageService } from '../services/storage';
-import { Trash2, History, Download, Upload, RefreshCw, AlertTriangle, CheckCircle2, ShieldCheck, DollarSign, Calendar, CheckCircle, XCircle, Sun, Moon, Palette } from 'lucide-react';
+import { formatValor } from '../utils/privacy';
+import { Trash2, History, Download, Upload, RefreshCw, AlertTriangle, CheckCircle2, ShieldCheck, DollarSign, Calendar, CheckCircle, XCircle, Sun, Moon, Palette, Eye, EyeOff, Shield, UserCheck, KeyRound, LogOut, Lock, Code2, Award } from 'lucide-react';
 import { ConfirmModal } from '../components/ConfirmModal';
+import { AlterarSenhaModal } from '../components/AlterarSenhaModal';
+import { AdminDevPanel } from '../components/AdminDevPanel';
 
 export const SettingsScreen: React.FC = () => {
-  const { tatuagens, clientes, clearAllData, reloadData, navigate, theme, toggleTheme } = useAgenda();
+  const { tatuagens, clientes, clearAllData, reloadData, navigate, theme, toggleTheme, modoPrivacidade, toggleModoPrivacidade } = useAgenda();
+  const { currentUser, logout, autoLockMinutes, setAutoLockMinutes } = useAuth();
 
-  const [syncKey, setSyncKey] = useState('');
   const [feedbackMsg, setFeedbackMsg] = useState('');
+  const [feedbackType, setFeedbackType] = useState<'success' | 'error'>('success');
   const [isConfirmClearOpen, setIsConfirmClearOpen] = useState(false);
+  const [isAlterarSenhaOpen, setIsAlterarSenhaOpen] = useState(false);
 
   const stats = {
     total: tatuagens.length,
@@ -22,10 +28,6 @@ export const SettingsScreen: React.FC = () => {
     .filter(t => t.status === 'concluído')
     .reduce((acc, t) => acc + (t.valor || 0), 0);
 
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
-  };
-
   const handleClearAll = () => {
     setIsConfirmClearOpen(true);
   };
@@ -33,8 +35,9 @@ export const SettingsScreen: React.FC = () => {
   const handleConfirmClearAll = () => {
     clearAllData();
     setIsConfirmClearOpen(false);
+    setFeedbackType('success');
     setFeedbackMsg('Todos os dados foram apagados com sucesso.');
-    setTimeout(() => setFeedbackMsg(''), 3000);
+    setTimeout(() => setFeedbackMsg(''), 3500);
   };
 
   const handleExportBackup = () => {
@@ -51,8 +54,9 @@ export const SettingsScreen: React.FC = () => {
     a.download = `gustavo_tattoo_backup_${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    setFeedbackMsg('Backup baixado com sucesso!');
-    setTimeout(() => setFeedbackMsg(''), 3000);
+    setFeedbackType('success');
+    setFeedbackMsg('Backup seguro baixado com sucesso!');
+    setTimeout(() => setFeedbackMsg(''), 3500);
   };
 
   const handleImportBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,27 +67,68 @@ export const SettingsScreen: React.FC = () => {
       try {
         const parsed = JSON.parse(reader.result as string);
         if (parsed && typeof parsed === 'object') {
-          if (Array.isArray(parsed.clientes)) StorageService.saveClientes(parsed.clientes);
-          if (Array.isArray(parsed.tatuagens)) StorageService.saveTatuagens(parsed.tatuagens);
+          // Sanitize imported clientes
+          if (Array.isArray(parsed.clientes)) {
+            const cleanClientes = parsed.clientes.map((c: any) => ({
+              id: String(c.id || Math.random().toString(36).substring(2)),
+              nome: String(c.nome || '').trim().slice(0, 100),
+              telefone: String(c.telefone || '').trim().slice(0, 30),
+              instagram: c.instagram ? String(c.instagram).trim().slice(0, 50) : '',
+              observacoes: c.observacoes ? String(c.observacoes).trim().slice(0, 500) : '',
+              dataCadastro: c.dataCadastro || new Date().toISOString(),
+            }));
+            StorageService.saveClientes(cleanClientes);
+          }
+
+          // Sanitize imported tatuagens
+          if (Array.isArray(parsed.tatuagens)) {
+            const cleanTatuagens = parsed.tatuagens.map((t: any) => ({
+              id: String(t.id || Math.random().toString(36).substring(2)),
+              clienteId: String(t.clienteId || ''),
+              descricao: String(t.descricao || '').trim().slice(0, 300),
+              estilo: String(t.estilo || '').slice(0, 50),
+              localCorpo: String(t.localCorpo || '').slice(0, 50),
+              valor: typeof t.valor === 'number' ? Math.max(0, t.valor) : 0,
+              data: t.data || new Date().toISOString().split('T')[0],
+              horario: t.horario || '14:00',
+              duracaoMinutos: typeof t.duracaoMinutos === 'number' ? t.duracaoMinutos : 120,
+              status: ['agendado', 'concluído', 'cancelado'].includes(t.status) ? t.status : 'agendado',
+              fotosReferencia: Array.isArray(t.fotosReferencia) ? t.fotosReferencia.slice(0, 10) : [],
+              fotosResultado: Array.isArray(t.fotosResultado) ? t.fotosResultado.slice(0, 10) : [],
+              observacoes: t.observacoes ? String(t.observacoes).slice(0, 500) : '',
+            }));
+            StorageService.saveTatuagens(cleanTatuagens);
+          }
           
           reloadData();
-          setFeedbackMsg('Todos os dados e backups foram restaurados com sucesso!');
-          setTimeout(() => setFeedbackMsg(''), 3000);
+          setFeedbackType('success');
+          setFeedbackMsg('Dados restaurados com validação de segurança com sucesso!');
+          setTimeout(() => setFeedbackMsg(''), 4000);
         } else {
-          alert('Arquivo de backup inválido.');
+          setFeedbackType('error');
+          setFeedbackMsg('Estrutura de backup inválida ou não reconhecida.');
+          setTimeout(() => setFeedbackMsg(''), 4000);
         }
       } catch (err) {
-        alert('Erro ao processar o arquivo de backup.');
+        setFeedbackType('error');
+        setFeedbackMsg('Erro ao processar o arquivo de backup. Formato JSON inválido.');
+        setTimeout(() => setFeedbackMsg(''), 4000);
       }
     };
     reader.readAsText(file);
+    // Reset file input
+    e.target.value = '';
   };
 
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-8">
       {feedbackMsg && (
-        <div className="p-4 rounded-2xl bg-[#4CAF50]/15 border border-[#4CAF50]/30 text-[#4CAF50] text-sm font-semibold flex items-center justify-center gap-2 animate-fade-in">
-          <CheckCircle2 size={18} />
+        <div className={`p-4 rounded-2xl border text-sm font-semibold flex items-center justify-center gap-2 animate-fade-in ${
+          feedbackType === 'error'
+            ? 'bg-[#E63946]/15 border-[#E63946]/40 text-[#FF6B6B]'
+            : 'bg-[#4CAF50]/15 border-[#4CAF50]/30 text-[#4CAF50]'
+        }`}>
+          {feedbackType === 'error' ? <AlertTriangle size={18} /> : <CheckCircle2 size={18} />}
           <span>{feedbackMsg}</span>
         </div>
       )}
@@ -162,6 +207,203 @@ export const SettingsScreen: React.FC = () => {
         </div>
       </div>
 
+      {/* Privacy Mode Card */}
+      <div className="bg-[#2D2D2D] border border-[#3A3A3A] p-5 rounded-3xl shadow-xl space-y-4">
+        <div className="flex items-center gap-2 border-b border-[#3A3A3A] pb-3">
+          <Shield size={20} className="text-[#4CAF50]" />
+          <div>
+            <h2 className="text-base font-bold text-[#F5F5F5]">Modo de Privacidade e Proteção</h2>
+            <p className="text-xs text-[#999999]">Oculte valores faturados, telefones e nomes de clientes na tela</p>
+          </div>
+        </div>
+
+        <button
+          onClick={toggleModoPrivacidade}
+          className={`w-full p-4 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
+            modoPrivacidade
+              ? 'bg-[#4CAF50]/15 border-[#4CAF50] text-[#4CAF50] shadow-lg shadow-[#4CAF50]/10'
+              : 'bg-[#2A2A2A] border-[#3A3A3A] text-[#F5F5F5] hover:border-[#4CAF50]/50'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div className={`p-2.5 rounded-xl ${modoPrivacidade ? 'bg-[#4CAF50] text-white' : 'bg-[#1C1C1C] text-[#999999]'}`}>
+              {modoPrivacidade ? <EyeOff size={22} /> : <Eye size={22} />}
+            </div>
+            <div className="text-left">
+              <span className="block text-sm font-extrabold">
+                {modoPrivacidade ? 'Modo de Privacidade ATIVADO' : 'Modo de Privacidade DESATIVADO'}
+              </span>
+              <span className="text-xs opacity-80">
+                {modoPrivacidade
+                  ? 'Valores faturados e dados pessoais dos clientes estão mascarados com •••••'
+                  : 'Clique para ocultar dados sigilosos e proteger informações na tela'}
+              </span>
+            </div>
+          </div>
+          <span className={`text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider ${
+            modoPrivacidade ? 'bg-[#4CAF50] text-white' : 'bg-[#1C1C1C] text-[#999999]'
+          }`}>
+            {modoPrivacidade ? 'Ativo' : 'Inativo'}
+          </span>
+        </button>
+      </div>
+
+      {/* Developer Admin Panel (Exclusively visible when authenticated as Developer Caio) */}
+      {currentUser?.isDev && (
+        <div className="space-y-2">
+          <AdminDevPanel />
+        </div>
+      )}
+
+      {/* Security & Access Management Card */}
+      <div className="bg-[#2D2D2D] border border-[#3A3A3A] p-5 rounded-3xl shadow-xl space-y-4">
+        <div className="flex items-center justify-between border-b border-[#3A3A3A] pb-3">
+          <div className="flex items-center gap-2">
+            <ShieldCheck size={20} className={currentUser?.isDev ? "text-[#8B5CF6]" : "text-[#FF6B35]"} />
+            <div>
+              <h2 className="text-base font-bold text-[#F5F5F5]">Segurança & Conta de Acesso</h2>
+              <p className="text-xs text-[#999999]">Controle da tela de login e credenciais do estúdio</p>
+            </div>
+          </div>
+          {currentUser?.isDev ? (
+            <span className="px-2.5 py-1 rounded-full bg-[#8B5CF6]/20 border border-[#8B5CF6]/40 text-[#C4B5FD] text-[11px] font-extrabold flex items-center gap-1">
+              <Code2 size={12} /> Desenvolvedor Master
+            </span>
+          ) : (
+            <span className="px-2.5 py-1 rounded-full bg-[#FF6B35]/20 border border-[#FF6B35]/40 text-[#FF9E79] text-[11px] font-extrabold">
+              Tatuador
+            </span>
+          )}
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-2xl bg-[#222222] border border-[#333333]">
+          <div className="flex items-center gap-3">
+            <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-sm border ${
+              currentUser?.isDev 
+                ? 'bg-[#8B5CF6]/20 text-[#C4B5FD] border-[#8B5CF6]/40 shadow-md shadow-[#8B5CF6]/20'
+                : 'bg-[#FF6B35]/20 text-[#FF6B35] border-[#FF6B35]/30'
+            }`}>
+              {currentUser?.isDev ? <Code2 size={22} /> : <UserCheck size={22} />}
+            </div>
+            <div>
+              <p className="text-sm font-bold text-[#F5F5F5] flex items-center gap-2">
+                <span>{currentUser?.name || 'Gustavo'}</span>
+                {currentUser?.isDev && (
+                  <span className="text-[10px] bg-[#8B5CF6]/30 text-[#D8B4FE] px-1.5 py-0.5 rounded font-mono font-bold">
+                    @{currentUser.username}
+                  </span>
+                )}
+              </p>
+              <p className="text-xs text-[#999999]">
+                {currentUser?.role || 'Tatuador & Administrador'} • <span className="text-[#4CAF50] font-semibold">Sessão Autenticada</span>
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <button
+              onClick={() => setIsAlterarSenhaOpen(true)}
+              className="flex-1 sm:flex-initial py-2.5 px-3.5 rounded-xl bg-[#2A2A2A] hover:bg-[#333333] text-[#F5F5F5] text-xs font-semibold flex items-center justify-center gap-1.5 border border-[#3A3A3A] transition-all cursor-pointer"
+            >
+              <KeyRound size={14} className="text-[#FFB703]" />
+              <span>Alterar Minha Senha</span>
+            </button>
+
+            <button
+              onClick={() => logout()}
+              className="flex-1 sm:flex-initial py-2.5 px-3.5 rounded-xl bg-[#E63946]/15 hover:bg-[#E63946]/25 text-[#FF6B6B] text-xs font-semibold flex items-center justify-center gap-1.5 border border-[#E63946]/40 transition-all cursor-pointer"
+              title="Encerrar sessão e voltar para a tela de login"
+            >
+              <LogOut size={14} />
+              <span>Bloquear / Sair</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Quick Developer Access notice when logged in as Gustavo */}
+        {!currentUser?.isDev && (
+          <div className="p-3.5 rounded-2xl bg-[#1E1B29] border border-[#8B5CF6]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="space-y-0.5">
+              <span className="text-xs font-bold text-[#D8B4FE] flex items-center gap-1.5">
+                <Code2 size={14} className="text-[#A78BFA]" />
+                Perfil de Desenvolvedor (Caio)
+              </span>
+              <p className="text-[11px] text-[#A699CC]">
+                Para mudar senhas de usuários e acessar informações técnicas do sistema, acesse com a conta do desenvolvedor.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => logout('Acesse com o usuário Caio para utilizar as ferramentas de desenvolvedor.')}
+              className="py-1.5 px-3 rounded-xl bg-[#8B5CF6]/20 hover:bg-[#8B5CF6]/30 text-[#D8B4FE] text-xs font-bold border border-[#8B5CF6]/40 transition-all cursor-pointer shrink-0"
+            >
+              Entrar como Desenvolvedor
+            </button>
+          </div>
+        )}
+
+        {/* Auto-Lock Configuration */}
+        <div className="p-4 rounded-2xl bg-[#222222] border border-[#333333] space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <span className="text-xs font-bold text-[#F5F5F5] flex items-center gap-1.5">
+                <Lock size={14} className="text-[#FF6B35]" />
+                Bloqueio Automático por Inatividade
+              </span>
+              <p className="text-[11px] text-[#888888]">
+                Protege contra olhares curiosos no estúdio se o aparelho for deixado sobre a bancada
+              </p>
+            </div>
+            <span className="text-xs font-black text-[#FFB703] bg-[#2A2A2A] px-2.5 py-1 rounded-lg border border-[#3A3A3A]">
+              {autoLockMinutes > 0 ? `${autoLockMinutes} min` : 'Desativado'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-4 gap-2 pt-1">
+            {[5, 15, 30, 0].map((mins) => (
+              <button
+                key={mins}
+                type="button"
+                onClick={() => setAutoLockMinutes(mins)}
+                className={`py-2 px-2 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
+                  autoLockMinutes === mins
+                    ? 'bg-[#FF6B35] text-white border-[#FF6B35] shadow-md shadow-[#FF6B35]/20'
+                    : 'bg-[#181818] text-[#888888] border-[#333333] hover:text-[#F5F5F5] hover:border-[#555555]'
+                }`}
+              >
+                {mins === 0 ? 'Nunca' : `${mins} min`}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Anti-Data Leak Diagnostic Audit */}
+        <div className="p-4 rounded-2xl bg-[#1A1A1A] border border-[#333333] space-y-2.5">
+          <p className="text-xs font-bold text-[#4CAF50] flex items-center gap-1.5">
+            <ShieldCheck size={14} className="text-[#4CAF50]" />
+            Auditoria de Segurança contra Vazamento de Dados
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+            <div className="flex items-center gap-2 p-2 rounded-xl bg-[#222222] text-[#CCCCCC]">
+              <span className="w-2 h-2 rounded-full bg-[#4CAF50]" />
+              <span>Regras Firestore: <strong>Acesso restrito autenticado</strong></span>
+            </div>
+            <div className="flex items-center gap-2 p-2 rounded-xl bg-[#222222] text-[#CCCCCC]">
+              <span className="w-2 h-2 rounded-full bg-[#4CAF50]" />
+              <span>Proteção Força Bruta: <strong>Máx. 5 tentativas</strong></span>
+            </div>
+            <div className="flex items-center gap-2 p-2 rounded-xl bg-[#222222] text-[#CCCCCC]">
+              <span className="w-2 h-2 rounded-full bg-[#4CAF50]" />
+              <span>Bloqueio de Sessão: <strong>{autoLockMinutes > 0 ? `${autoLockMinutes} min ocioso` : 'Manual'}</strong></span>
+            </div>
+            <div className="flex items-center gap-2 p-2 rounded-xl bg-[#222222] text-[#CCCCCC]">
+              <span className={`w-2 h-2 rounded-full ${modoPrivacidade ? 'bg-[#4CAF50]' : 'bg-[#FFB703]'}`} />
+              <span>Máscara de Tela: <strong>{modoPrivacidade ? 'Ativada (•••••)' : 'Disponível no topo'}</strong></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Stats Cards */}
       <div>
         <h2 className="text-lg font-bold text-[#F5F5F5] mb-4 flex items-center gap-2 border-l-4 border-[#FF6B35] pl-3">
@@ -210,7 +452,7 @@ export const SettingsScreen: React.FC = () => {
               Faturamento Concluído
             </p>
             <p className="text-3xl font-black text-[#FFB703] mt-1">
-              {formatCurrency(faturamentoConcluido)}
+              {formatValor(faturamentoConcluido, modoPrivacidade)}
             </p>
             <p className="text-xs text-[#FF6B35] font-bold mt-2 flex items-center gap-1">
               Ver detalhamento mês a mês →
@@ -307,6 +549,11 @@ export const SettingsScreen: React.FC = () => {
         isDanger={true}
         onConfirm={handleConfirmClearAll}
         onCancel={() => setIsConfirmClearOpen(false)}
+      />
+
+      <AlterarSenhaModal
+        isOpen={isAlterarSenhaOpen}
+        onClose={() => setIsAlterarSenhaOpen(false)}
       />
     </div>
   );

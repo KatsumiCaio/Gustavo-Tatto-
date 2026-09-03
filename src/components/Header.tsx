@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useAgenda } from '../contexts/AgendaContext';
+import { useAuth } from '../contexts/AuthContext';
 import { ScreenName } from '../types';
-import { ArrowLeft, Settings, Smartphone, Bell, Sun, Moon } from 'lucide-react';
+import { ArrowLeft, Settings, Smartphone, Bell, Sun, Moon, Eye, EyeOff, LogOut, Lock, Code2 } from 'lucide-react';
 import { InstallAppModal } from './InstallAppModal';
 import { NotificationPromptModal } from './NotificationPromptModal';
 
@@ -23,7 +24,8 @@ const titlesMap: Record<ScreenName, string> = {
 };
 
 export const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
-  const { currentScreen, goBack, theme, toggleTheme } = useAgenda();
+  const { currentScreen, goBack, navigate, theme, toggleTheme, modoPrivacidade, toggleModoPrivacidade } = useAgenda();
+  const { logout, currentUser } = useAuth();
 
   const displayTitle = title || titlesMap[currentScreen] || 'Gustavo Tattoo';
 
@@ -66,9 +68,33 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
 
         {/* Right actions */}
         <div className="flex items-center gap-2">
+          {/* Privacy Toggle Button */}
+          <button
+            onClick={toggleModoPrivacidade}
+            className={`p-2 rounded-xl border transition-all flex items-center gap-1.5 text-xs font-semibold shadow-sm cursor-pointer ${
+              modoPrivacidade
+                ? 'bg-[#E63946]/15 border-[#E63946]/50 text-[#E63946] hover:bg-[#E63946]/25'
+                : 'bg-[#2A2A2A] border-[#3A3A3A] text-[#999999] hover:bg-[#3A3A3A] hover:text-[#F5F5F5]'
+            }`}
+            title={modoPrivacidade ? 'Modo Privativo Ativo (Valores e dados ocultos). Clique para exibir.' : 'Ocultar valores e dados sigilosos'}
+            aria-label="Alternar modo privacidade"
+          >
+            {modoPrivacidade ? (
+              <>
+                <EyeOff size={18} className="text-[#E63946]" />
+                <span className="hidden sm:inline text-[#E63946] font-bold">Privado</span>
+              </>
+            ) : (
+              <>
+                <Eye size={18} className="text-[#999999]" />
+                <span className="hidden sm:inline">Visível</span>
+              </>
+            )}
+          </button>
+
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-xl bg-[#2A2A2A] text-[#FFB703] hover:bg-[#3A3A3A] border border-[#3A3A3A] transition-all flex items-center gap-1.5 text-xs font-semibold shadow-sm"
+            className="p-2 rounded-xl bg-[#2A2A2A] text-[#FFB703] hover:bg-[#3A3A3A] border border-[#3A3A3A] transition-all flex items-center gap-1.5 text-xs font-semibold shadow-sm cursor-pointer"
             title={theme === 'dark' ? 'Mudar para Modo Claro' : 'Mudar para Modo Escuro'}
             aria-label="Alternar tema"
           >
@@ -77,6 +103,30 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
               {theme === 'dark' ? 'Claro' : 'Escuro'}
             </span>
           </button>
+
+          {/* Quick Lock / Logout */}
+          <button
+            onClick={() => logout()}
+            className="p-2 rounded-xl bg-[#2A2A2A] hover:bg-[#E63946]/20 border border-[#3A3A3A] hover:border-[#E63946]/50 text-[#888888] hover:text-[#FF6B6B] transition-all flex items-center gap-1.5 text-xs font-semibold shadow-sm cursor-pointer"
+            title="Bloquear aplicativo (Sair da sessão)"
+            aria-label="Bloquear aplicativo"
+          >
+            <Lock size={17} />
+            <span className="hidden md:inline">Bloquear</span>
+          </button>
+
+          {/* Dev Badge if logged in as Caio */}
+          {currentUser?.isDev && (
+            <button
+              onClick={() => navigate('settings')}
+              className="inline-flex items-center gap-1.5 bg-[#8B5CF6]/20 hover:bg-[#8B5CF6]/30 text-[#C4B5FD] text-xs font-bold px-2.5 py-1.5 rounded-full border border-[#8B5CF6]/40 transition-colors cursor-pointer"
+              title="Logado como Desenvolvedor (Caio). Clique para abrir o Painel Admin."
+            >
+              <Code2 size={13} className="text-[#A78BFA]" />
+              <span className="hidden sm:inline">Dev:</span>
+              <span>Caio</span>
+            </button>
+          )}
 
           <span className="inline-flex items-center gap-1.5 bg-[#25D366]/10 text-[#25D366] text-xs font-bold px-2.5 py-1.5 rounded-full border border-[#25D366]/30">
             <span className="w-1.5 h-1.5 rounded-full bg-[#25D366] animate-pulse"></span>

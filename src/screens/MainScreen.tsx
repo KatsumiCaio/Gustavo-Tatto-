@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useAgenda } from '../contexts/AgendaContext';
+import { formatValor } from '../utils/privacy';
 import { Calendar, UserPlus, PlusCircle, History, DollarSign, Users, Clock, Sparkles, Smartphone, Apple, Bell, ShieldCheck } from 'lucide-react';
 import { InstallAppModal } from '../components/InstallAppModal';
 import { NotificationPromptModal } from '../components/NotificationPromptModal';
 
 export const MainScreen: React.FC = () => {
-  const { navigate, tatuagens, clientes, unreadNotificacoesCount, permissaoNotificacaoState } = useAgenda();
+  const { navigate, tatuagens, clientes, unreadNotificacoesCount, permissaoNotificacaoState, modoPrivacidade } = useAgenda();
   const [isInstallOpen, setIsInstallOpen] = useState(false);
   const [isNotifPromptOpen, setIsNotifPromptOpen] = useState(false);
 
@@ -172,7 +173,7 @@ export const MainScreen: React.FC = () => {
             <DollarSign size={14} /> Concluídos
           </div>
           <span className="text-lg sm:text-2xl font-black text-[#4CAF50]">
-            {formatCurrency(faturamentoTotal)}
+            {formatValor(faturamentoTotal, modoPrivacidade)}
           </span>
         </div>
 

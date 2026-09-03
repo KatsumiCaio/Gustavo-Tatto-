@@ -2,8 +2,50 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Global Safety Net: Default-deny all undefined paths
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Clientes Collection
+    match /clientes/{clienteId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() 
+        && isValidId(clienteId)
+        && request.resource.data.nome is string 
+        && request.resource.data.nome.size() > 0 
+        && request.resource.data.nome.size() <= 200
+        && (!('telefone' in request.resource.data) || (request.resource.data.telefone is string && request.resource.data.telefone.size() <= 50));
+      allow delete: if isSignedIn() && isValidId(clienteId);
+    }
+
+    // Tatuagens Collection
+    match /tatuagens/{tatuagemId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() 
+        && isValidId(tatuagemId)
+        && request.resource.data.cliente is string 
+        && request.resource.data.cliente.size() > 0 
+        && request.resource.data.cliente.size() <= 200
+        && (!('data' in request.resource.data) || (request.resource.data.data is string && request.resource.data.data.size() <= 60));
+      allow delete: if isSignedIn() && isValidId(tatuagemId);
+    }
+
+    // Notificacoes Collection
+    match /notificacoes/{notificacaoId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() 
+        && isValidId(notificacaoId)
+        && (!('mensagem' in request.resource.data) || (request.resource.data.mensagem is string && request.resource.data.mensagem.size() <= 2000));
+      allow delete: if isSignedIn() && isValidId(notificacaoId);
     }
   }
 }
