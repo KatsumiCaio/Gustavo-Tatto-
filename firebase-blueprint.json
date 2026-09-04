@@ -56,6 +56,24 @@
         "criadaEm": { "type": "string" }
       },
       "required": ["tatuagemId", "cliente", "mensagem"]
+    },
+    "auth_accounts": {
+      "title": "Contas de Acesso",
+      "description": "Contas de acesso e credenciais com hash seguro no Firestore",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "username": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string" },
+        "isAdmin": { "type": "boolean" },
+        "isDev": { "type": "boolean" },
+        "passwordHash": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "lastLogin": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["username", "passwordHash"]
     }
   }
 }

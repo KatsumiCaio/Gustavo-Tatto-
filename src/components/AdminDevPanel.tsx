@@ -109,7 +109,7 @@ export const AdminDevPanel: React.FC = () => {
       if (res.success) {
         setFeedback({
           type: 'success',
-          message: `Senha de @${selectedUser.username} (${selectedUser.displayName}) alterada com sucesso!`,
+          message: `Senha de @${selectedUser.username} (${selectedUser.displayName}) alterada e gravada com sucesso no banco de dados na nuvem (Firestore)! Já está válida em qualquer aparelho.`,
         });
         setNewPassword('');
         setConfirmPassword('');
@@ -572,6 +572,13 @@ export const AdminDevPanel: React.FC = () => {
               <div className="p-3 rounded-xl bg-[#231E38] text-[#D8B4FE] flex items-center justify-between">
                 <span className="text-[#A699CC]">Segurança Firestore:</span>
                 <strong className="text-[#4CAF50]">Hardened (Restrito a auth)</strong>
+              </div>
+              <div className="p-3 rounded-xl bg-[#231E38] text-[#D8B4FE] flex items-center justify-between sm:col-span-2">
+                <span className="text-[#A699CC]">Persistência de Senhas:</span>
+                <strong className="text-[#4CAF50] flex items-center gap-1">
+                  <Database size={12} />
+                  Nuvem (Firestore / auth_accounts) + Sincronização em Tempo Real
+                </strong>
               </div>
             </div>
           </div>

@@ -118,6 +118,65 @@ type SyncCallback = {
 
 let syncCallbacks: SyncCallback = {};
 
+let lastSyncVersion = 0;
+
+async function syncWithServer(): Promise<void> {
+  try {
+    const statusResp = await fetch('/api/sync/status', { cache: 'no-store' });
+    if (!statusResp.ok) return;
+    const status = await statusResp.json();
+    if (status && typeof status.version === 'number' && status.version !== lastSyncVersion) {
+      const dataResp = await fetch('/api/sync/all', { cache: 'no-store' });
+      if (!dataResp.ok) return;
+      const data = await dataResp.json();
+      lastSyncVersion = data.version || status.version;
+
+      if (Array.isArray(data.clientes) && data.clientes.length > 0) {
+        localStorage.setItem(CLIENTES_KEY, JSON.stringify(data.clientes));
+        saveIDB(CLIENTES_KEY, data.clientes);
+        if (syncCallbacks.onClientes) syncCallbacks.onClientes(data.clientes);
+      }
+      if (Array.isArray(data.tatuagens) && data.tatuagens.length > 0) {
+        localStorage.setItem(TATUAGENS_KEY, JSON.stringify(data.tatuagens));
+        saveIDB(TATUAGENS_KEY, data.tatuagens);
+        if (syncCallbacks.onTatuagens) syncCallbacks.onTatuagens(data.tatuagens);
+      }
+      if (Array.isArray(data.notificacoes)) {
+        const deletedSet = new Set(StorageService.getDeletedNotificacaoIds());
+        const clean = data.notificacoes.filter((n: any) => !deletedSet.has(n.id) && !isNotificacaoOld(n));
+        if (clean.length > 0) {
+          localStorage.setItem(NOTIFICACOES_KEY, JSON.stringify(clean));
+          saveIDB(NOTIFICACOES_KEY, clean);
+          if (syncCallbacks.onNotificacoes) syncCallbacks.onNotificacoes(clean);
+        }
+      }
+    }
+  } catch {
+    // Backend offline / network unreachable
+  }
+}
+
+async function pushToServer(partial?: { clientes?: Cliente[]; tatuagens?: Tatuagem[]; notificacoes?: Notificacao[] }): Promise<void> {
+  try {
+    const payload = {
+      clientes: partial?.clientes ?? StorageService.getClientes(),
+      tatuagens: partial?.tatuagens ?? StorageService.getTatuagens(),
+      notificacoes: partial?.notificacoes ?? StorageService.getNotificacoes(),
+    };
+    const resp = await fetch('/api/sync/all', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data && data.version) lastSyncVersion = data.version;
+    }
+  } catch {
+    // Backend offline / network unreachable
+  }
+}
+
 export const StorageService = {
   subscribeSync(callbacks: SyncCallback) {
     syncCallbacks = callbacks;
@@ -187,6 +246,20 @@ export const StorageService = {
   async initStorage(): Promise<void> {
     try {
       await this.restoreFromIDB();
+
+      // 1. Initial synchronization with central server
+      syncWithServer().catch(() => {});
+
+      // 2. Poll server every 8 seconds so changes from any device appear automatically
+      setInterval(() => {
+        syncWithServer().catch(() => {});
+      }, 8000);
+
+      const onFocusSync = () => {
+        syncWithServer().catch(() => {});
+      };
+      window.addEventListener('focus', onFocusSync);
+      document.addEventListener('visibilitychange', onFocusSync);
 
       onSnapshot(
         collection(db, 'clientes'),
@@ -356,7 +429,10 @@ export const StorageService = {
       console.error('Error saving clientes locally:', e);
     }
 
-    // Direct Firestore sync without blocking getDocs call
+    // 1. Sync to Central Server API
+    pushToServer({ clientes }).catch(() => {});
+
+    // 2. Direct Firestore sync without blocking getDocs call
     try {
       if (clientes.length === 0) return;
       const batch = writeBatch(db);
@@ -389,7 +465,10 @@ export const StorageService = {
       console.error('Error saving tatuagens locally:', e);
     }
 
-    // Direct Firestore sync without blocking getDocs call
+    // 1. Sync to Central Server API
+    pushToServer({ tatuagens }).catch(() => {});
+
+    // 2. Direct Firestore sync without blocking getDocs call
     try {
       if (tatuagens.length === 0) return;
       const batch = writeBatch(db);
@@ -429,7 +508,10 @@ export const StorageService = {
       console.error('Error saving notificacoes locally:', e);
     }
 
-    // Direct Firestore sync without blocking getDocs call
+    // 1. Sync to Central Server API
+    pushToServer({ notificacoes: cleanNotifs }).catch(() => {});
+
+    // 2. Direct Firestore sync without blocking getDocs call
     try {
       if (cleanNotifs.length === 0) return;
       const batch = writeBatch(db);

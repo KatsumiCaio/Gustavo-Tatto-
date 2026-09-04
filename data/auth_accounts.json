@@ -1,0 +1,25 @@
+[
+  {
+    "id": "user_caio",
+    "username": "caio",
+    "displayName": "Caio Katsumi",
+    "role": "Desenvolvedor & Administrador",
+    "isAdmin": true,
+    "isDev": true,
+    "passwordHash": "f0c37b862dbffbf45e205d720a27aaf87c7641339550899725a869962ca40912",
+    "createdAt": "2026-09-04T11:13:03.701Z",
+    "updatedAt": "2026-09-04T11:13:03.701Z"
+  },
+  {
+    "id": "user_gustavo",
+    "username": "gustavo",
+    "displayName": "Gustavo Tattoo",
+    "role": "Tatuador & Administrador",
+    "isAdmin": false,
+    "isDev": false,
+    "passwordHash": "ea566c882f900454f9687b117a69f7c7f8ae2c5312b9000ea6f34675a47cc56f",
+    "createdAt": "2026-09-04T11:13:03.701Z",
+    "updatedAt": "2026-09-04T11:13:28.043Z",
+    "lastLogin": "2026-09-04T11:13:30.254Z"
+  }
+]

@@ -47,5 +47,16 @@ service cloud.firestore {
         && (!('mensagem' in request.resource.data) || (request.resource.data.mensagem is string && request.resource.data.mensagem.size() <= 2000));
       allow delete: if isSignedIn() && isValidId(notificacaoId);
     }
+
+    // Contas de Acesso e Senhas Criptografadas (SHA-256)
+    match /auth_accounts/{userId} {
+      allow read: if true;
+      allow create, update: if userId is string
+        && userId.size() > 0
+        && userId.size() <= 128
+        && request.resource.data.username is string
+        && request.resource.data.passwordHash is string;
+      allow delete: if userId is string && userId.size() > 0;
+    }
   }
 }

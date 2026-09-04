@@ -81,6 +81,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   useEffect(() => {
+    // Start real-time Firestore listener for cross-device credential synchronization
+    const unsubAuth = AuthService.initAuthListener();
+
+    // Trigger initial background sync with Cloud Firestore
+    AuthService.syncRemoteAccounts().catch(() => {});
+
     // Check if there is an active session
     const existingSession = AuthService.checkActiveSession();
     if (existingSession) {
@@ -91,6 +97,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLogoutReason(savedReason);
     }
     setIsLoading(false);
+
+    return () => {
+      unsubAuth();
+    };
   }, []);
 
   // Inactivity auto-lock monitor
